@@ -1,0 +1,113 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'idea'
+}
+
+defaultTasks 'clean', 'build', 'test'
+
+def appGroup = 'com.bofa.equity'
+def appVersion = '1.0.0-SNAPSHOT'
+def javaVersion = JavaVersion.VERSION_17
+def AERON_VERSION = '1.39.0'
+def AGRONA_VERSION = '1.16.0'
+def SBE_VERSION = '1.26.0'
+def DECIMAL_4J_VERSION = '1.0.3' // garbage free decimal operations
+def HDR_HISTOGRAM_VERSION = '2.1.12' // latency capture library with plotting
+
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
+
+    group appGroup
+    version appVersion
+
+    compileJava {
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+        options.compilerArgs.addAll(['--add-exports', 'java.base/sun.nio.ch=ALL-UNNAMED'])
+        options.encoding = 'UTF-8'
+        options.deprecation = true
+    }
+
+    compileTestJava {
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+        options.compilerArgs.addAll(['--add-exports', 'java.base/sun.nio.ch=ALL-UNNAMED'])
+        options.encoding = 'UTF-8'
+        options.deprecation = true
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    configurations {
+        codecGeneration
+    }
+
+    def generatedDir = file("${buildDir}/generated-src")
+    sourceSets {
+        generated {
+            java.srcDir generatedDir
+            compileClasspath += configurations.codecGeneration
+        }
+    }
+
+    dependencies {
+        implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
+        implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.11'
+        implementation group: 'io.aeron', name: 'aeron-all', version: AERON_VERSION
+        implementation group: 'org.agrona', name: 'agrona', version: AGRONA_VERSION
+        implementation group: 'org.decimal4j', name: 'decimal4j', version: DECIMAL_4J_VERSION
+        implementation group: 'org.hdrhistogram', name: 'HdrHistogram', version: HDR_HISTOGRAM_VERSION
+        api files('build/classes/java/generated')
+        codecGeneration group: 'uk.co.real-logic', name: 'sbe-tool', version: SBE_VERSION
+        testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.8.2'
+        testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.8.2'
+        testImplementation sourceSets.generated.output
+    }
+
+    compileJava {
+        dependsOn 'generateCodecs'
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+        options.deprecation = true
+        // classpath += sourceSets.main.runtimeClasspath
+    }
+
+    task generateCodecs(type: JavaExec) {
+        def codecsFile = 'src/main/resources/messages.xml'
+        def sbeFile = 'src/main/resources/sbe/sbe.xsd'
+
+        inputs.files(codecsFile, sbeFile)
+        outputs.dir generatedDir
+
+        mainClass = 'uk.co.real_logic.sbe.SbeTool'
+        classpath = configurations.codecGeneration
+        systemProperties(
+                'sbe.output.dir': generatedDir,
+                'sbe.target.language': 'Java',
+                'sbe.validation.xsd': sbeFile,
+                'sbe.validation.stop.on.error': 'true')
+        args = [codecsFile]
+    }
+
+    test {
+        useJUnitPlatform()
+        jvmArgs('--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED')
+        jvmArgs('--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED')
+
+        testLogging {
+            showStandardStreams = true
+            exceptionFormat = 'full'
+        }
+    }
+
+    idea {
+        module {
+            downloadJavadoc = true
+            downloadSources = true
+        }
+    }
+}

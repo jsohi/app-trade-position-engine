@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   package="com.bofa.equity.sbe"
+                   id="100"
+                   version="1"
+                   semanticVersion="0.1"
+                   description="Bofa trade messages">
+    <types>
+        <!-- Header  message can be used to define schema/version. Templates can be used to identify which message type it is.
+        This is overkill for current exercise, but useful in prod env where we have diff type/versions of message -->
+        <composite name="messageHeader" description="Message identifiers and length of message root">
+            <type name="blockLength" primitiveType="uint16"/>
+            <type name="templateId" primitiveType="uint16"/>
+            <type name="schemaId" primitiveType="uint16"/>
+            <type name="version" primitiveType="uint16"/>
+        </composite>
+
+        <!-- SBE chars are single byte (8 bits) * 32 = 32 bytes -->
+        <type name="ReferenceIdType" primitiveType="char" length="32" characterEncoding="ASCII"/>
+
+        <!-- single byte (8 bits) using short -->
+        <type name="AccountIdType" primitiveType="uint8" minValue="1" maxValue="10"/>
+
+        <!-- single byte (8 bits) -->
+        <type name="SecurityIdType" primitiveType="uint8" minValue="1" maxValue="2000"/>
+
+        <!-- single byte (8 bits) -->
+        <enum name="SideType" encodingType="uint8">
+            <validValue name="B" description="Buy">0</validValue>
+            <validValue name="S" description="Sell">1</validValue>
+        </enum>
+
+        <!-- 64 bits (8byte) -->
+        <type name="QuantityType" primitiveType="uint64"/>
+
+        <!-- Out of scope for this exercise, but can be represented in decimals like below
+        <composite name="PriceOrAmountType">
+            <type name="mantissa" primitiveType="int64"/>
+            <type name="exponent" primitiveType="int8"/>
+        </composite>-->
+
+        <!-- 64 bits (8byte)  -->
+        <type name="PriceType" primitiveType="double"/>
+
+        <!-- 64 bits (8byte) -->
+        <type name="TimestampType" primitiveType="uint64"/>
+
+        <!-- 4096 bytes / 2 bytes per char on UTF-8 = max 2048 char length -->
+        <composite name="DescriptionStringEncoding" description="Variable length UTF-8 string">
+            <type name="length" primitiveType="uint16" maxValue="2048"/>
+            <type name="varData" primitiveType="uint16" length="0" characterEncoding="UTF-8"/>
+        </composite>
+
+    </types>
+
+    <sbe:message name="Trade" id="1" description="Trade message">
+
+        <field name="referenceId" id="1" type="ReferenceIdType" description="Actual trade reference id"/>
+
+        <!-- Keeping ids in primitive data types, mapping from account strings ids <> primitive types will be handled by some store
+            and cached upfront in all trading apps for mapping (Assumption) -->
+        <field name="accountId" id="2" type="AccountIdType" description="Account primitive id"/>
+
+        <field name="securityId" id="3" type="SecurityIdType" description="Security primitive id"/>
+
+        <field name="side" id="4" type="SideType" description="Account integer id"/>
+
+        <field name="quantity" id="5" type="uint64" description="Trade quantity"/>
+
+        <field name="price" id="6" type="PriceType" description="Trade price"/>
+
+        <!-- can use nanos for more precision -->
+        <field name="timestampMillis" id="7" type="TimestampType" description="Timestamp in millis"/>
+
+        <!--Can be moved out of this message completely and stored somewhere else by publisher via some other aeron publication using microservice,
+         as description doesn't play any part in position aggregations-->
+        <data name="description" id="8" type="DescriptionStringEncoding" description="Audit descriptive text"/>
+
+    </sbe:message>
+
+</sbe:messageSchema>
