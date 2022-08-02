@@ -16,7 +16,7 @@ Build project using gradle. For simplicity, I have copied generated SBE codecs (
 
 Run below class and both position aggregation and latency stats will be written on console at the end
 
-[TradePositionEngineApp.java](src/main/resources/com/bofa/equity/TradePositionEngineApp.java)
+[TradePositionEngineApp.java](src/main/java/com/bofa/equity/TradePositionEngineApp.java)
 
 ```
 // Change below count to play with publisher count under TradePositionEngineApp class
