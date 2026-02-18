@@ -71,4 +71,18 @@ dependencies {
     implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.5.32'
     implementation group: 'io.aeron', name: 'aeron-all', version: AERON_VERSION
     implementation group: 'org.agrona', name: 'agrona', version: AGRONA_VERSION
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.14.0'
+    testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: '1.14.0'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.14.0'
+}
+
+test {
+    useJUnitPlatform()
+    jvmArgs('--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED')
+    jvmArgs('--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED')
+    jvmArgs('--add-opens', 'java.base/jdk.internal.misc=ALL-UNNAMED')
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
 }
