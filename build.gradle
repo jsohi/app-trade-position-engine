@@ -1,7 +1,17 @@
 plugins {
     id 'java'
     id 'java-library'
+    id 'application'
     id 'idea'
+}
+
+application {
+    mainClass = 'com.bofa.equity.TradePositionEngineApp'
+    applicationDefaultJvmArgs = [
+        '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED',
+        '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
+        '--add-opens', 'java.base/jdk.internal.misc=ALL-UNNAMED'
+    ]
 }
 
 defaultTasks 'clean', 'build', 'test'
