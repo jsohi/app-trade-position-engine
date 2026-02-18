@@ -1,0 +1,38 @@
+plugins {
+    id 'java-library'
+}
+
+configurations {
+    codecGeneration
+}
+
+def generatedDir = layout.buildDirectory.dir("generated-src").get().asFile
+
+sourceSets.main.java.srcDir generatedDir
+
+task generateCodecs(type: JavaExec) {
+    def codecsFile = 'src/main/resources/messages.xml'
+    def sbeFile = 'src/main/resources/sbe/sbe.xsd'
+
+    inputs.files(codecsFile, sbeFile)
+    outputs.dir generatedDir
+
+    mainClass = 'uk.co.real_logic.sbe.SbeTool'
+    classpath = configurations.codecGeneration
+    systemProperties(
+            'sbe.output.dir': generatedDir,
+            'sbe.target.language': 'Java',
+            'sbe.validation.xsd': sbeFile,
+            'sbe.validation.stop.on.error': 'true')
+    args = [codecsFile]
+}
+
+compileJava.dependsOn('generateCodecs')
+
+dependencies {
+    api group: 'io.aeron', name: 'aeron-all', version: AERON_VERSION
+    api group: 'org.agrona', name: 'agrona', version: AGRONA_VERSION
+    api group: 'org.decimal4j', name: 'decimal4j', version: DECIMAL_4J_VERSION
+    api group: 'org.slf4j', name: 'slf4j-api', version: '2.0.17'
+    codecGeneration group: 'uk.co.real-logic', name: 'sbe-tool', version: SBE_VERSION
+}
