@@ -26,7 +26,7 @@ public enum TradeTestCodecs {
                 .side(sideType)
                 .quantity(quantity)
                 .price(price)
-                .timestampMillis(System.currentTimeMillis())
+                .timestampMillis(System.nanoTime())
                 .description("testing");
 
         messageHeaderDecoder.wrap(directBuffer, 0);

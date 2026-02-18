@@ -7,6 +7,7 @@ import org.agrona.concurrent.Agent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.bofa.equity.trade.AuditTradeCodec.encodeAuditTrade;
 import static com.bofa.equity.trade.TradeCodec.encodeTrade;
 import static java.util.Objects.requireNonNull;
 
@@ -15,15 +16,24 @@ public class SendAgent implements Agent {
 
     // Can also use agrona UnsafeBuffer with fixed capacity for off heap usage, but in memory buffer is sufficient for current use case
     private final MutableDirectBuffer directBuffer = new ExpandableArrayBuffer();
+    private final MutableDirectBuffer auditBuffer  = new ExpandableArrayBuffer();
 
     private final Publication publication;
+    private final Publication auditPublication; // nullable — stream 11 for audit/regulatory data
     private final int sendCount;
     private int currentCountItem = 0;
 
-    public SendAgent(final Publication publication, final int sendCount) {
-        this.publication = requireNonNull(publication);
-        this.sendCount = sendCount;
+    // Full constructor: position stream + optional audit stream
+    public SendAgent(final Publication publication, final Publication auditPublication, final int sendCount) {
+        this.publication      = requireNonNull(publication);
+        this.auditPublication = auditPublication; // nullable
+        this.sendCount        = sendCount;
         logger.info(" configured to send={}", sendCount);
+    }
+
+    // Convenience constructor — no audit publication (backward compatible with tests)
+    public SendAgent(final Publication publication, final int sendCount) {
+        this(publication, null, sendCount);
     }
 
     @Override
@@ -36,6 +46,11 @@ public class SendAgent implements Agent {
             final int encodingLengthPlusHeader = encodeTrade(directBuffer);
             if (publication.offer(directBuffer, 0, encodingLengthPlusHeader) > 0) {
                 currentCountItem++;
+                // Publish audit data on separate stream when available
+                if (auditPublication != null && auditPublication.isConnected()) {
+                    final int auditLength = encodeAuditTrade(auditBuffer);
+                    auditPublication.offer(auditBuffer, 0, auditLength);
+                }
             }
         } else {
             logger.error("Unable to publish, not connected"); // can throw exception here

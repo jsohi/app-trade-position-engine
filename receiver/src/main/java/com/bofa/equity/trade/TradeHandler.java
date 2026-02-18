@@ -24,7 +24,7 @@ public record TradeHandler(PositionAggregator positionAggregator) {
 
     public boolean handle(final DirectBuffer directBuffer,
                           final int offset,
-                          final long receivedTimeMillis) {
+                          final long receivedTimeNanos) {
 
         MESSAGE_HEADER_DECODER.wrap(directBuffer, offset);
 
@@ -38,7 +38,7 @@ public record TradeHandler(PositionAggregator positionAggregator) {
             throw new IllegalStateException("Template ids do not match");
         }
 
-        decode(TRADE_DECODER, directBuffer, offset, MESSAGE_HEADER_DECODER, receivedTimeMillis);
+        decode(TRADE_DECODER, directBuffer, offset, MESSAGE_HEADER_DECODER, receivedTimeNanos);
 
         // TBD, can copying trade encoder values to record Trade object for indexed data
         // tradeIndex.put(TRADE_DECODER.referenceId(), new Trade())
@@ -49,12 +49,12 @@ public record TradeHandler(PositionAggregator positionAggregator) {
                         final DirectBuffer directBuffer,
                         final int offset,
                         final MessageHeaderDecoder headerDecoder,
-                        final long receivedTimeMillis) {
+                        final long receivedTimeNanos) {
         trade.wrapAndApplyHeader(directBuffer, offset, headerDecoder);
         // validation of trade fields can be done here
 
         logger.debug("Handling {}", trade);
-        positionAggregator.aggregate(trade, receivedTimeMillis);
+        positionAggregator.aggregate(trade, receivedTimeNanos);
     }
 
 }

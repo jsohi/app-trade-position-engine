@@ -37,7 +37,7 @@ public class PositionAggregatorTest {
 
         // when
         final TradeDecoder tradeDecoder = encodeTrade(accountId, securityId, sideType, quantity, price);
-        positionAggregator.aggregate(tradeDecoder, System.currentTimeMillis());
+        positionAggregator.aggregate(tradeDecoder, System.nanoTime());
 
         // then
         final PositionData actualPositionData = positionAggregator.positionData(accountId, securityId);
@@ -62,7 +62,7 @@ public class PositionAggregatorTest {
 
         // when
         final TradeDecoder tradeDecoder = encodeTrade(accountId, securityId, sideType, quantity, price);
-        positionAggregator.aggregate(tradeDecoder, System.currentTimeMillis());
+        positionAggregator.aggregate(tradeDecoder, System.nanoTime());
 
         // then
         final PositionData actualPositionData = positionAggregator.positionData(accountId, securityId);
@@ -92,11 +92,11 @@ public class PositionAggregatorTest {
         // when
         // trade 1
         final TradeDecoder tradeDecoder1 = encodeTrade(accountId, securityId, sideType, quantity, price);
-        positionAggregator.aggregate(tradeDecoder1, System.currentTimeMillis());
+        positionAggregator.aggregate(tradeDecoder1, System.nanoTime());
 
         // trade 2
         final TradeDecoder tradeDecoder2 = encodeTrade(accountId, securityId, sideType, quantity, price);
-        positionAggregator.aggregate(tradeDecoder2, System.currentTimeMillis());
+        positionAggregator.aggregate(tradeDecoder2, System.nanoTime());
 
         // then
         final PositionData actualPositionData = positionAggregator.positionData(accountId, securityId);
@@ -122,11 +122,11 @@ public class PositionAggregatorTest {
         // when
         // trade 1
         final TradeDecoder tradeDecoder = encodeTrade(accountId, securityId, sideType, quantity, price);
-        positionAggregator.aggregate(tradeDecoder, System.currentTimeMillis());
+        positionAggregator.aggregate(tradeDecoder, System.nanoTime());
 
         // trade 2
         final TradeDecoder tradeDecoder2 = encodeTrade(accountId, securityId, sideType, quantity, price);
-        positionAggregator.aggregate(tradeDecoder2, System.currentTimeMillis());
+        positionAggregator.aggregate(tradeDecoder2, System.nanoTime());
 
         // then
         final PositionData actualPositionData = positionAggregator.positionData(accountId, securityId);
@@ -159,11 +159,11 @@ public class PositionAggregatorTest {
         // when
         // trade 1
         final TradeDecoder tradeDecoder = encodeTrade(accountId, securityId, sideType1, quantity1, price1);
-        positionAggregator.aggregate(tradeDecoder, System.currentTimeMillis());
+        positionAggregator.aggregate(tradeDecoder, System.nanoTime());
 
         // trade 2
         final TradeDecoder tradeDecoder2 = encodeTrade(accountId, securityId, sideType2, quantity2, price2);
-        positionAggregator.aggregate(tradeDecoder2, System.currentTimeMillis());
+        positionAggregator.aggregate(tradeDecoder2, System.nanoTime());
 
         // then
         final PositionData actualPositionData = positionAggregator.positionData(accountId, securityId);

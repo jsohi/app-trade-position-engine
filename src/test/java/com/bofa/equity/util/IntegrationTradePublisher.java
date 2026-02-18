@@ -28,7 +28,7 @@ public final class IntegrationTradePublisher {
                 .side(side)
                 .quantity(quantity)
                 .price(price)
-                .timestampMillis(System.currentTimeMillis())
+                .timestampMillis(System.nanoTime())
                 .description("integration-test");
 
         final int length = MessageHeaderEncoder.ENCODED_LENGTH + TRADE_ENCODER.encodedLength();

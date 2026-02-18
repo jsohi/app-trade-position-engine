@@ -78,4 +78,16 @@
 
     </sbe:message>
 
+    <sbe:message name="AuditTrade" id="2" description="Audit trade message — regulatory/text data on a separate stream">
+
+        <field name="referenceId" id="1" type="ReferenceIdType"          description="Actual trade reference id"/>
+
+        <field name="accountId"   id="2" type="AccountIdType"            description="Account primitive id"/>
+
+        <field name="securityId"  id="3" type="SecurityIdType"           description="Security primitive id"/>
+
+        <data  name="description" id="4" type="DescriptionStringEncoding" description="Audit descriptive text"/>
+
+    </sbe:message>
+
 </sbe:messageSchema>
