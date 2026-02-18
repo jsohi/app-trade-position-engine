@@ -11,7 +11,7 @@ import static com.bofa.equity.trade.TradeCodec.encodeTrade;
 import static java.util.Objects.requireNonNull;
 
 public class SendAgent implements Agent {
-    private final Logger logger = LoggerFactory.getLogger(ReceiveAgent.class);
+    private final Logger logger = LoggerFactory.getLogger(SendAgent.class);
 
     // Can also use agrona UnsafeBuffer with fixed capacity for off heap usage, but in memory buffer is sufficient for current use case
     private final MutableDirectBuffer directBuffer = new ExpandableArrayBuffer();
