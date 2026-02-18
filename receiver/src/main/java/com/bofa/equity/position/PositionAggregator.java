@@ -15,11 +15,12 @@ import static java.util.Objects.requireNonNull;
 public class PositionAggregator {
     private static final Logger logger = LoggerFactory.getLogger(PositionAggregator.class);
 
-    private static final Histogram END_TO_END_HISTOGRAM = new Histogram(TimeUnit.SECONDS.toNanos(10), 3);
+    private static final long HISTOGRAM_MAX_NANOS = TimeUnit.SECONDS.toNanos(10);
+    private static final Histogram END_TO_END_HISTOGRAM = new Histogram(HISTOGRAM_MAX_NANOS, 3);
     // TRANSPORT_HISTOGRAM is a placeholder for publish→receive latency;
     // it records the same value as END_TO_END_HISTOGRAM until a dedicated publish
     // timestamp is added to the SBE message header for true transport latency measurement.
-    private static final Histogram TRANSPORT_HISTOGRAM  = new Histogram(TimeUnit.SECONDS.toNanos(10), 3);
+    private static final Histogram TRANSPORT_HISTOGRAM  = new Histogram(HISTOGRAM_MAX_NANOS, 3);
 
     // re-usable string buffer to copy chars, without creating new Strings object from trade decoder
     private final StringBuffer tradeReferenceBuffer = new StringBuffer(TradeDecoder.referenceIdLength());
@@ -56,6 +57,11 @@ public class PositionAggregator {
 
     private void recordLatency(final long tradeTimestampNanos, final long receivedTimeNanos) {
         final long latencyNanos = receivedTimeNanos - tradeTimestampNanos;
+        if (latencyNanos < 0 || latencyNanos > HISTOGRAM_MAX_NANOS) {
+            logger.warn("Dropping out-of-range latency sample: {}ns (tradeTimestamp={}, receivedTime={})",
+                    latencyNanos, tradeTimestampNanos, receivedTimeNanos);
+            return;
+        }
         END_TO_END_HISTOGRAM.recordValue(latencyNanos);
         TRANSPORT_HISTOGRAM.recordValue(latencyNanos);
     }

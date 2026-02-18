@@ -81,7 +81,6 @@ dependencies {
     testImplementation group: 'io.cucumber', name: 'cucumber-picocontainer',             version: '7.20.1'
     testImplementation group: 'org.junit.platform', name: 'junit-platform-suite',        version: '1.14.0'
     testRuntimeOnly    group: 'org.junit.platform', name: 'junit-platform-suite-engine', version: '1.14.0'
-    testImplementation group: 'org.hdrhistogram',   name: 'HdrHistogram',                version: HDR_HISTOGRAM_VERSION
 }
 
 test {

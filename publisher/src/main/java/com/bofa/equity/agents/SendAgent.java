@@ -49,7 +49,11 @@ public class SendAgent implements Agent {
                 // Publish audit data on separate stream when available
                 if (auditPublication != null && auditPublication.isConnected()) {
                     final int auditLength = encodeAuditTrade(auditBuffer);
-                    auditPublication.offer(auditBuffer, 0, auditLength);
+                    final long auditResult = auditPublication.offer(auditBuffer, 0, auditLength);
+                    if (auditResult < 0) {
+                        logger.warn("Audit message offer failed for trade {}: result={} — message lost",
+                                currentCountItem, auditResult);
+                    }
                 }
             }
         } else {
