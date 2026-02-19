@@ -21,8 +21,8 @@
         <!-- single byte (8 bits) using short -->
         <type name="AccountIdType" primitiveType="uint8" minValue="1" maxValue="10"/>
 
-        <!-- single byte (8 bits) -->
-        <type name="SecurityIdType" primitiveType="uint8" minValue="1" maxValue="2000"/>
+        <!-- two bytes (16 bits) — uint16 required to hold values up to 2000 (uint8 max is 255) -->
+        <type name="SecurityIdType" primitiveType="uint16" minValue="1" maxValue="2000"/>
 
         <!-- single byte (8 bits) -->
         <enum name="SideType" encodingType="uint8">
