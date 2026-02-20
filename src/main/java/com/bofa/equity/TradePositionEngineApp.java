@@ -59,6 +59,13 @@ public class TradePositionEngineApp {
         final PositionAggregator positionAggregator = new PositionAggregator(Cache.defaultCache());
         final TradeHandler tradeHandler = new TradeHandler(positionAggregator);
 
+        // Pin all threads (warm-up and benchmark) to separate cores so the warm-up runs under the
+        // same CPU conditions as the benchmark — same cache topology, same branch-predictor state.
+        // On macOS, sched_setaffinity is unavailable — OpenHFT degrades silently to best-effort.
+        // On Linux this will hard-pin each thread to a distinct physical core.
+        final AffinityThreadFactory threadFactory =
+                new AffinityThreadFactory("trade-engine", AffinityStrategies.DIFFERENT_CORE);
+
         // === WARM-UP PHASE ===
         // Send warmUpCount trades to JIT-compile hot paths and warm CPU caches before recording stats.
         logger.info("Starting warm-up phase with {} trades...", warmUpCount);
@@ -68,8 +75,12 @@ public class TradePositionEngineApp {
         final AgentRunner warmUpReceiveRunner = new AgentRunner(new BusySpinIdleStrategy(),
                 Throwable::printStackTrace, null,
                 new ReceiveAgent(subscription, warmUpBarrier, warmUpCount, tradeHandler));
-        AgentRunner.startOnThread(warmUpSendRunner);
-        AgentRunner.startOnThread(warmUpReceiveRunner);
+        final Thread warmUpSendThread    = threadFactory.newThread(warmUpSendRunner);
+        final Thread warmUpReceiveThread = threadFactory.newThread(warmUpReceiveRunner);
+        warmUpSendThread.setName("warm-up-sender");
+        warmUpReceiveThread.setName("warm-up-receiver");
+        warmUpSendThread.start();
+        warmUpReceiveThread.start();
         warmUpBarrier.await();
         warmUpReceiveRunner.close();
         warmUpSendRunner.close();
@@ -91,11 +102,6 @@ public class TradePositionEngineApp {
 
         logger.info("Starting app with aeronChannel={}...", aeronChannel);
 
-        // Pin sender and receiver to separate CPU cores for lowest latency.
-        // On macOS, sched_setaffinity is unavailable — OpenHFT degrades silently to best-effort.
-        // On Linux this will hard-pin each thread to a distinct physical core.
-        final AffinityThreadFactory threadFactory =
-                new AffinityThreadFactory("trade-engine", AffinityStrategies.DIFFERENT_CORE);
         final Thread sendThread    = threadFactory.newThread(sendAgentRunner);
         final Thread receiveThread = threadFactory.newThread(receiveAgentRunner);
         sendThread.setName("sender");
