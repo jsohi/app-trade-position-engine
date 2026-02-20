@@ -36,4 +36,6 @@ public interface PositionData {
 
     void update(long quantity, double price, boolean buy);
 
+    StringBuilder appendTo(StringBuilder builder);
+
 }

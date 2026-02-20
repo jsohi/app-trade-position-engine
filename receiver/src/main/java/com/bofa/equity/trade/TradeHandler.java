@@ -17,6 +17,7 @@ public record TradeHandler(PositionAggregator positionAggregator) {
 
     private static final MessageHeaderDecoder MESSAGE_HEADER_DECODER = new MessageHeaderDecoder();
     private static final TradeDecoder TRADE_DECODER = new TradeDecoder();
+    private static final StringBuilder LOG_BUFFER = new StringBuilder(256); // pre-allocated, avoids String allocation at log call site
 
     // Storing the indexed trade data with attributes, however we can even store just index trade reference ids only here and data can be stored separately by another microservice
     // we can also use object pooling here, where position objects are created at startup with initial capacity and even when expanding post load factor changes
@@ -65,7 +66,9 @@ public record TradeHandler(PositionAggregator positionAggregator) {
         trade.wrapAndApplyHeader(directBuffer, offset, headerDecoder);
         // validation of trade fields can be done here
 
-        logger.debug("Handling {}", trade);
+        LOG_BUFFER.setLength(0);
+        trade.appendTo(LOG_BUFFER);
+        logger.debug("Handling {}", LOG_BUFFER);
         positionAggregator.aggregate(trade, receivedTimeNanos);
     }
 

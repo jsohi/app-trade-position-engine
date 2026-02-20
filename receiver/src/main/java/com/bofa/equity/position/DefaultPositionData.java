@@ -1,7 +1,5 @@
 package com.bofa.equity.position;
 
-import java.util.StringJoiner;
-
 public class DefaultPositionData implements PositionData {
 
 
@@ -59,16 +57,21 @@ public class DefaultPositionData implements PositionData {
     }
 
     @Override
+    public StringBuilder appendTo(final StringBuilder builder) {
+        builder.append(DefaultPositionData.class.getSimpleName()).append('[')
+                .append("accountId=").append(accountId())
+                .append(", securityId=").append(securityId())
+                .append(", buyQuantity=").append(buyQuantity())
+                .append(", sellQuantity=").append(sellQuantity())
+                .append(", netQuantity=").append(netQuantity())
+                .append(", avgBuyPrice=").append(avgBuyPrice())
+                .append(", avgSellPrice=").append(avgSellPrice())
+                .append(']');
+        return builder;
+    }
+
+    @Override
     public String toString() {
-        // can be improved using temp string buffer to not create garbage while logging
-        return new StringJoiner(", ", DefaultPositionData.class.getSimpleName() + "[", "]")
-                .add("accountId=" + accountId())
-                .add("securityId=" + securityId())
-                .add("buyQuantity=" + buyQuantity())
-                .add("sellQuantity=" + sellQuantity())
-                .add("netQuantity=" + netQuantity())
-                .add("avgBuyPrice=" + avgBuyPrice())
-                .add("avgSellPrice=" + avgSellPrice())
-                .toString();
+        return appendTo(new StringBuilder()).toString();
     }
 }

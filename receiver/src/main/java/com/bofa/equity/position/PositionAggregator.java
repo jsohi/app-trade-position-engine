@@ -24,6 +24,8 @@ public class PositionAggregator {
 
     // re-usable string buffer to copy chars, without creating new Strings object from trade decoder
     private final StringBuffer tradeReferenceBuffer = new StringBuffer(TradeDecoder.referenceIdLength());
+    // pre-allocated log buffer — passed as CharSequence to avoid String allocation on the log call site
+    private final StringBuilder positionLogBuffer = new StringBuilder(256);
 
     // can be replaced with Account/Security Pair class to Position data HashMap with overridden equals and hashcode
     private final BiInt2ObjectMap<PositionData> positionDataByAccountAndSecurity = new BiInt2ObjectMap<>();
@@ -52,7 +54,9 @@ public class PositionAggregator {
 
         currentData.update(trade.quantity(), trade.price(), SideType.B == trade.side());
 
-        logger.debug("{}", currentData);
+        positionLogBuffer.setLength(0);
+        currentData.appendTo(positionLogBuffer);
+        logger.debug("{}", positionLogBuffer);
     }
 
     private void recordLatency(final long tradeTimestampNanos, final long receivedTimeNanos) {
@@ -76,8 +80,12 @@ public class PositionAggregator {
         // TODO if we need to log actual account and security String values, we can reverse lookup string ids from Cache
         logger.info("### Logging stats post processing all trades data ### ");
 
-        logger.debug("Position aggregation results={}", positionDataByAccountAndSecurity); // change to info for checking aggregated data in logs
-        positionDataByAccountAndSecurity.forEach(e -> logger.debug("{}", e));
+        logger.debug("Position aggregation results={}", positionDataByAccountAndSecurity.toString()); // change to info for checking aggregated data in logs
+        positionDataByAccountAndSecurity.forEach(e -> {
+            positionLogBuffer.setLength(0);
+            e.appendTo(positionLogBuffer);
+            logger.debug("{}", positionLogBuffer);
+        });
 
         System.out.println("=== END-TO-END LATENCY (nanos) ===");
         END_TO_END_HISTOGRAM.outputPercentileDistribution(System.out, 1.0);

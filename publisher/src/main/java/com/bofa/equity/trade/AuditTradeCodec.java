@@ -15,6 +15,7 @@ public class AuditTradeCodec {
     private final AuditTradeEncoder auditEncoder = new AuditTradeEncoder();
     private final StringBuilder referenceIdTemp = new StringBuilder(AuditTradeEncoder.referenceIdLength());
     private final byte[] descriptionBytes = new byte[2048]; // pre-allocated, zero garbage on hot path
+    private final StringBuilder logBuffer = new StringBuilder(256); // pre-allocated, avoids String allocation at log call site
 
     public int encodeAuditTrade(final MutableDirectBuffer buffer) {
         auditEncoder.wrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
@@ -23,7 +24,9 @@ public class AuditTradeCodec {
                 .securityId(randomInt(2000) + 1) // int (not short) since SecurityIdType is uint16; +1 ensures range [1,2000]
                 .putDescription(descriptionBytes, 0, randomDescriptionBytes(descriptionBytes));
 
-        logger.debug("Encoded AuditTrade {}", auditEncoder);
+        logBuffer.setLength(0);
+        auditEncoder.appendTo(logBuffer);
+        logger.debug("Encoded AuditTrade {}", logBuffer);
         return MessageHeaderEncoder.ENCODED_LENGTH + auditEncoder.encodedLength();
     }
 }

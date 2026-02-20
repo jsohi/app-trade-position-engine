@@ -15,6 +15,7 @@ public class TradeCodec {
     private final TradeEncoder tradeEncoder = new TradeEncoder();
     private final StringBuilder referenceIdTemp = new StringBuilder(TradeEncoder.referenceIdLength());
     private final byte[] descriptionBytes = new byte[2048]; // pre-allocated, zero garbage on hot path
+    private final StringBuilder logBuffer = new StringBuilder(256); // pre-allocated, avoids String allocation at log call site
 
     public int encodeTrade(final MutableDirectBuffer directBuffer) {
         // validations of fields can be done here, before encoding fields
@@ -28,7 +29,9 @@ public class TradeCodec {
                 .timestampMillis(System.nanoTime()) // nanos stored in uint64 field; field name is legacy
                 .putDescription(descriptionBytes, 0, randomDescriptionBytes(descriptionBytes)); // zero allocation, variable length set last for SBE encoder
 
-        logger.debug("Encoded {}", tradeEncoder);
+        logBuffer.setLength(0);
+        tradeEncoder.appendTo(logBuffer);
+        logger.debug("Encoded {}", logBuffer);
         return MessageHeaderEncoder.ENCODED_LENGTH + tradeEncoder.encodedLength();
     }
 }
