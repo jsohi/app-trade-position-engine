@@ -26,6 +26,7 @@ ext {
     DECIMAL_4J_VERSION  = '1.0.3'  // garbage free decimal operations
     HDR_HISTOGRAM_VERSION = '2.2.2' // latency capture library with plotting
     AFFINITY_VERSION    = '3.23.3' // OpenHFT thread-to-core pinning
+    LOG4J_VERSION       = '2.24.3' // Log4j2 implementation + SLF4J 2.x bridge
 }
 
 allprojects {
@@ -68,8 +69,8 @@ dependencies {
     implementation project(':shared')
     implementation project(':publisher')
     implementation project(':receiver')
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.17'
-    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.5.32'
+    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: LOG4J_VERSION
+    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: LOG4J_VERSION
     implementation group: 'io.aeron', name: 'aeron-all', version: AERON_VERSION
     implementation group: 'org.agrona', name: 'agrona', version: AGRONA_VERSION
     implementation group: 'net.openhft', name: 'affinity', version: AFFINITY_VERSION
