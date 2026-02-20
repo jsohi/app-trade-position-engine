@@ -16,11 +16,11 @@ import org.agrona.concurrent.AgentRunner;
 import org.agrona.concurrent.BusySpinIdleStrategy;
 import org.agrona.concurrent.IdleStrategy;
 import org.agrona.concurrent.ShutdownSignalBarrier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TradePositionEngineApp {
-    private static final Logger logger = LoggerFactory.getLogger(TradePositionEngineApp.class);
+    private static final Logger logger = LogManager.getLogger(TradePositionEngineApp.class);
 
     public static void main(String[] args) {
         logger.info("Starting trade position engine app...");

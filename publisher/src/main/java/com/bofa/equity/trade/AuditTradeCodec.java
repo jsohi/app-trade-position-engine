@@ -3,13 +3,13 @@ package com.bofa.equity.trade;
 import com.bofa.equity.sbe.AuditTradeEncoder;
 import com.bofa.equity.sbe.MessageHeaderEncoder;
 import org.agrona.MutableDirectBuffer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static com.bofa.equity.trade.TradeEncoderHelper.*;
 
 public class AuditTradeCodec {
-    private static final Logger logger = LoggerFactory.getLogger(AuditTradeCodec.class);
+    private static final Logger logger = LogManager.getLogger(AuditTradeCodec.class);
 
     private final MessageHeaderEncoder messageHeaderEncoder = new MessageHeaderEncoder();
     private final AuditTradeEncoder auditEncoder = new AuditTradeEncoder();

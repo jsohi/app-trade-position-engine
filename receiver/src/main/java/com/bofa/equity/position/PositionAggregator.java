@@ -5,15 +5,15 @@ import com.bofa.equity.sbe.SideType;
 import com.bofa.equity.sbe.TradeDecoder;
 import org.HdrHistogram.Histogram;
 import org.agrona.collections.BiInt2ObjectMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
 
 public class PositionAggregator {
-    private static final Logger logger = LoggerFactory.getLogger(PositionAggregator.class);
+    private static final Logger logger = LogManager.getLogger(PositionAggregator.class);
 
     private static final long HISTOGRAM_MAX_NANOS = TimeUnit.SECONDS.toNanos(10);
     private static final Histogram END_TO_END_HISTOGRAM = new Histogram(HISTOGRAM_MAX_NANOS, 3);

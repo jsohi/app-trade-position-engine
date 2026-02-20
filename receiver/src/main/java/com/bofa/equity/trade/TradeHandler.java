@@ -5,15 +5,15 @@ import com.bofa.equity.sbe.MessageHeaderDecoder;
 import com.bofa.equity.sbe.TradeDecoder;
 import com.bofa.equity.sbe.TradeEncoder;
 import org.agrona.DirectBuffer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 // using record as trade handling data is immutable here
 public record TradeHandler(PositionAggregator positionAggregator) {
-    private static final Logger logger = LoggerFactory.getLogger(TradeHandler.class);
+    private static final Logger logger = LogManager.getLogger(TradeHandler.class);
 
     private static final MessageHeaderDecoder MESSAGE_HEADER_DECODER = new MessageHeaderDecoder();
     private static final TradeDecoder TRADE_DECODER = new TradeDecoder();
