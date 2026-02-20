@@ -24,7 +24,13 @@ public record TradeHandler(PositionAggregator positionAggregator) {
 
     public boolean handle(final DirectBuffer directBuffer,
                           final int offset,
+                          final int length,
                           final long receivedTimeNanos) {
+
+        if (length < MessageHeaderDecoder.ENCODED_LENGTH) {
+            logger.warn("Fragment too short for header: {} bytes", length);
+            return false;
+        }
 
         MESSAGE_HEADER_DECODER.wrap(directBuffer, offset);
 
@@ -36,6 +42,12 @@ public record TradeHandler(PositionAggregator positionAggregator) {
         final int templateId = MESSAGE_HEADER_DECODER.templateId();
         if (templateId != TradeEncoder.TEMPLATE_ID) {
             throw new IllegalStateException("Template ids do not match");
+        }
+
+        final int requiredLength = MessageHeaderDecoder.ENCODED_LENGTH + MESSAGE_HEADER_DECODER.blockLength();
+        if (length < requiredLength) {
+            logger.warn("Fragment too short for message block: {} bytes, expected at least {}", length, requiredLength);
+            return false;
         }
 
         decode(TRADE_DECODER, directBuffer, offset, MESSAGE_HEADER_DECODER, receivedTimeNanos);

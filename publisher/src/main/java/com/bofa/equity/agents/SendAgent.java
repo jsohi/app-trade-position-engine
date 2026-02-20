@@ -7,8 +7,8 @@ import org.agrona.concurrent.Agent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.bofa.equity.trade.AuditTradeCodec.encodeAuditTrade;
-import static com.bofa.equity.trade.TradeCodec.encodeTrade;
+import com.bofa.equity.trade.AuditTradeCodec;
+import com.bofa.equity.trade.TradeCodec;
 import static java.util.Objects.requireNonNull;
 
 public class SendAgent implements Agent {
@@ -17,6 +17,8 @@ public class SendAgent implements Agent {
     // Can also use agrona UnsafeBuffer with fixed capacity for off heap usage, but in memory buffer is sufficient for current use case
     private final MutableDirectBuffer directBuffer = new ExpandableArrayBuffer();
     private final MutableDirectBuffer auditBuffer  = new ExpandableArrayBuffer();
+    private final TradeCodec tradeCodec = new TradeCodec();
+    private final AuditTradeCodec auditTradeCodec = new AuditTradeCodec();
 
     private final Publication publication;
     private final Publication auditPublication; // nullable — stream 11 for audit/regulatory data
@@ -43,12 +45,12 @@ public class SendAgent implements Agent {
         }
 
         if (publication.isConnected()) {
-            final int encodingLengthPlusHeader = encodeTrade(directBuffer);
+            final int encodingLengthPlusHeader = tradeCodec.encodeTrade(directBuffer);
             if (publication.offer(directBuffer, 0, encodingLengthPlusHeader) > 0) {
                 currentCountItem++;
                 // Publish audit data on separate stream when available
                 if (auditPublication != null && auditPublication.isConnected()) {
-                    final int auditLength = encodeAuditTrade(auditBuffer);
+                    final int auditLength = auditTradeCodec.encodeAuditTrade(auditBuffer);
                     final long auditResult = auditPublication.offer(auditBuffer, 0, auditLength);
                     if (auditResult < 0) {
                         logger.warn("Audit message offer failed for trade {}: result={} — message lost",

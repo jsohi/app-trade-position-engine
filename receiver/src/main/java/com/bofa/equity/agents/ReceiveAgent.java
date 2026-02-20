@@ -44,7 +44,7 @@ public class ReceiveAgent implements Agent {
                          final int length,
                          final Header header) {
         final long receivedTimeNanos = System.nanoTime();
-        final boolean handledTrade = tradeHandler.handle(directBuffer, offset, receivedTimeNanos);
+        final boolean handledTrade = tradeHandler.handle(directBuffer, offset, length, receivedTimeNanos);
         if (handledTrade && ++currentCount >= sendCount) {
             logger.info("Processed {} in {} nanos", currentCount, receivedTimeNanos - processingStartTimeNanos);
             barrier.signal();

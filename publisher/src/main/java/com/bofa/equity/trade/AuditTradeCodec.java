@@ -8,26 +8,22 @@ import org.slf4j.LoggerFactory;
 
 import static com.bofa.equity.trade.TradeEncoderHelper.*;
 
-public enum AuditTradeCodec {
-    ;
-
+public class AuditTradeCodec {
     private static final Logger logger = LoggerFactory.getLogger(AuditTradeCodec.class);
 
-    private static final MessageHeaderEncoder MESSAGE_HEADER_ENCODER = new MessageHeaderEncoder();
-    private static final AuditTradeEncoder AUDIT_ENCODER = new AuditTradeEncoder();
+    private final MessageHeaderEncoder messageHeaderEncoder = new MessageHeaderEncoder();
+    private final AuditTradeEncoder auditEncoder = new AuditTradeEncoder();
+    private final StringBuilder referenceIdTemp = new StringBuilder(AuditTradeEncoder.referenceIdLength());
+    private final byte[] descriptionBytes = new byte[2048]; // pre-allocated, zero garbage on hot path
 
-    private static final StringBuilder referenceIdTemp = new StringBuilder(AuditTradeEncoder.referenceIdLength());
-    private static final byte[] descriptionBytes = new byte[2048]; // pre-allocated, zero garbage on hot path
-
-    public static int encodeAuditTrade(final MutableDirectBuffer buffer) {
-        AUDIT_ENCODER.wrapAndApplyHeader(buffer, 0, MESSAGE_HEADER_ENCODER)
+    public int encodeAuditTrade(final MutableDirectBuffer buffer) {
+        auditEncoder.wrapAndApplyHeader(buffer, 0, messageHeaderEncoder)
                 .referenceId(nextReferenceId(referenceIdTemp))
-                .accountId((short) randomInt(10))
-                .securityId((short) randomInt(2000))
+                .accountId((short) (randomInt(10) + 1)) // +1 ensures range [1,10] per AccountIdType minValue
+                .securityId(randomInt(2000) + 1) // int (not short) since SecurityIdType is uint16; +1 ensures range [1,2000]
                 .putDescription(descriptionBytes, 0, randomDescriptionBytes(descriptionBytes));
 
-        logger.debug("Encoded AuditTrade {}", AUDIT_ENCODER);
-        return MessageHeaderEncoder.ENCODED_LENGTH + AUDIT_ENCODER.encodedLength();
+        logger.debug("Encoded AuditTrade {}", auditEncoder);
+        return MessageHeaderEncoder.ENCODED_LENGTH + auditEncoder.encodedLength();
     }
-
 }
