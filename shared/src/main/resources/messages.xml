@@ -21,8 +21,8 @@
         <!-- single byte (8 bits) using short -->
         <type name="AccountIdType" primitiveType="uint8" minValue="1" maxValue="10"/>
 
-        <!-- single byte (8 bits) -->
-        <type name="SecurityIdType" primitiveType="uint8" minValue="1" maxValue="2000"/>
+        <!-- two bytes (16 bits) — uint16 required to hold values up to 2000 (uint8 max is 255) -->
+        <type name="SecurityIdType" primitiveType="uint16" minValue="1" maxValue="2000"/>
 
         <!-- single byte (8 bits) -->
         <enum name="SideType" encodingType="uint8">
@@ -75,6 +75,18 @@
         <!--Can be moved out of this message completely and stored somewhere else by publisher via some other aeron publication using microservice,
          as description doesn't play any part in position aggregations-->
         <data name="description" id="8" type="DescriptionStringEncoding" description="Audit descriptive text"/>
+
+    </sbe:message>
+
+    <sbe:message name="AuditTrade" id="2" description="Audit trade message — regulatory/text data on a separate stream">
+
+        <field name="referenceId" id="1" type="ReferenceIdType"          description="Actual trade reference id"/>
+
+        <field name="accountId"   id="2" type="AccountIdType"            description="Account primitive id"/>
+
+        <field name="securityId"  id="3" type="SecurityIdType"           description="Security primitive id"/>
+
+        <data  name="description" id="4" type="DescriptionStringEncoding" description="Audit descriptive text"/>
 
     </sbe:message>
 

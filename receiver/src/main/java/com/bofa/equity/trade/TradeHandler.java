@@ -24,7 +24,13 @@ public record TradeHandler(PositionAggregator positionAggregator) {
 
     public boolean handle(final DirectBuffer directBuffer,
                           final int offset,
-                          final long receivedTimeMillis) {
+                          final int length,
+                          final long receivedTimeNanos) {
+
+        if (length < MessageHeaderDecoder.ENCODED_LENGTH) {
+            logger.warn("Fragment too short for header: {} bytes", length);
+            return false;
+        }
 
         MESSAGE_HEADER_DECODER.wrap(directBuffer, offset);
 
@@ -38,7 +44,13 @@ public record TradeHandler(PositionAggregator positionAggregator) {
             throw new IllegalStateException("Template ids do not match");
         }
 
-        decode(TRADE_DECODER, directBuffer, offset, MESSAGE_HEADER_DECODER, receivedTimeMillis);
+        final int requiredLength = MessageHeaderDecoder.ENCODED_LENGTH + MESSAGE_HEADER_DECODER.blockLength();
+        if (length < requiredLength) {
+            logger.warn("Fragment too short for message block: {} bytes, expected at least {}", length, requiredLength);
+            return false;
+        }
+
+        decode(TRADE_DECODER, directBuffer, offset, MESSAGE_HEADER_DECODER, receivedTimeNanos);
 
         // TBD, can copying trade encoder values to record Trade object for indexed data
         // tradeIndex.put(TRADE_DECODER.referenceId(), new Trade())
@@ -49,12 +61,12 @@ public record TradeHandler(PositionAggregator positionAggregator) {
                         final DirectBuffer directBuffer,
                         final int offset,
                         final MessageHeaderDecoder headerDecoder,
-                        final long receivedTimeMillis) {
+                        final long receivedTimeNanos) {
         trade.wrapAndApplyHeader(directBuffer, offset, headerDecoder);
         // validation of trade fields can be done here
 
         logger.debug("Handling {}", trade);
-        positionAggregator.aggregate(trade, receivedTimeMillis);
+        positionAggregator.aggregate(trade, receivedTimeNanos);
     }
 
 }

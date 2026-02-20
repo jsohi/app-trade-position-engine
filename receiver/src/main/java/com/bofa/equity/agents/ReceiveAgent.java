@@ -5,9 +5,7 @@ import io.aeron.Subscription;
 import io.aeron.logbuffer.Header;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.Agent;
-import org.agrona.concurrent.EpochClock;
 import org.agrona.concurrent.ShutdownSignalBarrier;
-import org.agrona.concurrent.SystemEpochClock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,14 +16,12 @@ public class ReceiveAgent implements Agent {
 
     public static final int FRAGMENT_LIMIT = 100; // number of message fragments to limit when polling
 
-    private final EpochClock clock = SystemEpochClock.INSTANCE;
-
     private final Subscription subscription;
     private final ShutdownSignalBarrier barrier;
     private final int sendCount;
     private final TradeHandler tradeHandler;
     private int currentCount = 0;
-    private long processingStartTimeMillis;
+    private long processingStartTimeNanos;
 
     public ReceiveAgent(final Subscription subscription,
                         final ShutdownSignalBarrier barrier,
@@ -47,14 +43,14 @@ public class ReceiveAgent implements Agent {
                          final int offset,
                          final int length,
                          final Header header) {
-        final long receivedTimeMillis = clock.time();
-        final boolean handlerTrade = tradeHandler.handle(directBuffer, offset, receivedTimeMillis);
-        if (handlerTrade && ++currentCount >= sendCount) {
-            logger.info("Processed {} in {} millis", currentCount, receivedTimeMillis - processingStartTimeMillis);
+        final long receivedTimeNanos = System.nanoTime();
+        final boolean handledTrade = tradeHandler.handle(directBuffer, offset, length, receivedTimeNanos);
+        if (handledTrade && ++currentCount >= sendCount) {
+            logger.info("Processed {} in {} nanos", currentCount, receivedTimeNanos - processingStartTimeNanos);
             barrier.signal();
         }
         if (currentCount == 1) {
-            processingStartTimeMillis = receivedTimeMillis;
+            processingStartTimeNanos = receivedTimeNanos;
         }
     }
 

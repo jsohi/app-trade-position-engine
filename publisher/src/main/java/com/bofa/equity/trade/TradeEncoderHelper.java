@@ -45,4 +45,12 @@ public enum TradeEncoderHelper {
         }
         return descriptionTemp; // returning for chaining, not required to return at its passed by reference
     }
+
+    // Zero-allocation alternative: fills dest byte array with random ASCII chars
+    public static int randomDescriptionBytes(final byte[] dest) {
+        for (int i = 0; i < dest.length; i++) {
+            dest[i] = (byte) ALPHA_NUMS.charAt(randomInt(ALPHA_NUMS.length()));
+        }
+        return dest.length;
+    }
 }

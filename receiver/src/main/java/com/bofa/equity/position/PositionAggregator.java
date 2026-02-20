@@ -15,7 +15,12 @@ import static java.util.Objects.requireNonNull;
 public class PositionAggregator {
     private static final Logger logger = LoggerFactory.getLogger(PositionAggregator.class);
 
-    private static final Histogram HISTOGRAM = new Histogram(TimeUnit.SECONDS.toNanos(10), 3);
+    private static final long HISTOGRAM_MAX_NANOS = TimeUnit.SECONDS.toNanos(10);
+    private static final Histogram END_TO_END_HISTOGRAM = new Histogram(HISTOGRAM_MAX_NANOS, 3);
+    // TRANSPORT_HISTOGRAM is a placeholder for publish→receive latency;
+    // it records the same value as END_TO_END_HISTOGRAM until a dedicated publish
+    // timestamp is added to the SBE message header for true transport latency measurement.
+    private static final Histogram TRANSPORT_HISTOGRAM  = new Histogram(HISTOGRAM_MAX_NANOS, 3);
 
     // re-usable string buffer to copy chars, without creating new Strings object from trade decoder
     private final StringBuffer tradeReferenceBuffer = new StringBuffer(TradeDecoder.referenceIdLength());
@@ -33,8 +38,8 @@ public class PositionAggregator {
         }
     }
 
-    public void aggregate(final TradeDecoder trade, final long receivedTimeMillis) {
-        recordLatency(trade.timestampMillis(), receivedTimeMillis);
+    public void aggregate(final TradeDecoder trade, final long receivedTimeNanos) {
+        recordLatency(trade.timestampMillis(), receivedTimeNanos);
 
         tradeReferenceBuffer.setLength(0);
         trade.getReferenceId(tradeReferenceBuffer);
@@ -50,10 +55,21 @@ public class PositionAggregator {
         logger.debug("{}", currentData);
     }
 
-    private void recordLatency(final long tradeTimestampMillis, final long receivedTimeMillis) {
-        // record latency from trade creation time to process time.
-        // we can also change it to Trade publish time to received time on aeron expanding timestamps on SBE header messages
-        HISTOGRAM.recordValue(receivedTimeMillis - tradeTimestampMillis);
+    private void recordLatency(final long tradeTimestampNanos, final long receivedTimeNanos) {
+        final long latencyNanos = receivedTimeNanos - tradeTimestampNanos;
+        if (latencyNanos < 0 || latencyNanos > HISTOGRAM_MAX_NANOS) {
+            logger.warn("Dropping out-of-range latency sample: {}ns (tradeTimestamp={}, receivedTime={})",
+                    latencyNanos, tradeTimestampNanos, receivedTimeNanos);
+            return;
+        }
+        END_TO_END_HISTOGRAM.recordValue(latencyNanos);
+        TRANSPORT_HISTOGRAM.recordValue(latencyNanos);
+    }
+
+    public void resetStats() {
+        END_TO_END_HISTOGRAM.reset();
+        TRANSPORT_HISTOGRAM.reset();
+        logger.info("Stats histograms reset after warm-up phase");
     }
 
     public void stats() {
@@ -63,8 +79,10 @@ public class PositionAggregator {
         logger.debug("Position aggregation results={}", positionDataByAccountAndSecurity); // change to info for checking aggregated data in logs
         positionDataByAccountAndSecurity.forEach(e -> logger.debug("{}", e));
 
-        // System out for now
-        HISTOGRAM.outputPercentileDistribution(System.out, 1000.0);
+        System.out.println("=== END-TO-END LATENCY (nanos) ===");
+        END_TO_END_HISTOGRAM.outputPercentileDistribution(System.out, 1.0);
+        System.out.println("=== TRANSPORT LATENCY (nanos) ===");
+        TRANSPORT_HISTOGRAM.outputPercentileDistribution(System.out, 1.0);
     }
 
     PositionData positionData(final int accountId, final int securityId) {
