@@ -6,13 +6,13 @@ import io.aeron.logbuffer.Header;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.Agent;
 import org.agrona.concurrent.ShutdownSignalBarrier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static java.util.Objects.requireNonNull;
 
 public class ReceiveAgent implements Agent {
-    private final Logger logger = LoggerFactory.getLogger(ReceiveAgent.class);
+    private final Logger logger = LogManager.getLogger(ReceiveAgent.class);
 
     public static final int FRAGMENT_LIMIT = 100; // number of message fragments to limit when polling
 

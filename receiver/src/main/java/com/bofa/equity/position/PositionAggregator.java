@@ -5,15 +5,16 @@ import com.bofa.equity.sbe.SideType;
 import com.bofa.equity.sbe.TradeDecoder;
 import org.HdrHistogram.Histogram;
 import org.agrona.collections.BiInt2ObjectMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.StringBuilderFormattable;
 
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
 
 public class PositionAggregator {
-    private static final Logger logger = LoggerFactory.getLogger(PositionAggregator.class);
+    private static final Logger logger = LogManager.getLogger(PositionAggregator.class);
 
     private static final long HISTOGRAM_MAX_NANOS = TimeUnit.SECONDS.toNanos(10);
     private static final Histogram END_TO_END_HISTOGRAM = new Histogram(HISTOGRAM_MAX_NANOS, 3);
@@ -27,6 +28,10 @@ public class PositionAggregator {
 
     // can be replaced with Account/Security Pair class to Position data HashMap with overridden equals and hashcode
     private final BiInt2ObjectMap<PositionData> positionDataByAccountAndSecurity = new BiInt2ObjectMap<>();
+    // Pre-allocated formattable: iterates the map and appends each entry directly to Log4j2's ring-buffer
+    // without calling toString() on the map, avoiding a large String allocation on the stats path.
+    private final StringBuilderFormattable positionMapLog =
+            sb -> positionDataByAccountAndSecurity.forEach(e -> e.appendTo(sb));
 
     // if we have the count of account and security upfront, better to create objects upfront, otherwise we can create on the fly as well
     public PositionAggregator(final Cache cache) {
@@ -76,7 +81,7 @@ public class PositionAggregator {
         // TODO if we need to log actual account and security String values, we can reverse lookup string ids from Cache
         logger.info("### Logging stats post processing all trades data ### ");
 
-        logger.debug("Position aggregation results={}", positionDataByAccountAndSecurity); // change to info for checking aggregated data in logs
+        logger.debug("Position aggregation results={}", positionMapLog); // change to info for checking aggregated data in logs
         positionDataByAccountAndSecurity.forEach(e -> logger.debug("{}", e));
 
         System.out.println("=== END-TO-END LATENCY (nanos) ===");
