@@ -1,8 +1,9 @@
 package com.bofa.equity.position;
 
+import org.apache.logging.log4j.util.StringBuilderFormattable;
 import org.decimal4j.util.DoubleRounder;
 
-public interface PositionData {
+public interface PositionData extends StringBuilderFormattable {
 
     int DEFAULT_DECIMAL_PRECISION = 2;
 
@@ -37,5 +38,10 @@ public interface PositionData {
     void update(long quantity, double price, boolean buy);
 
     StringBuilder appendTo(StringBuilder builder);
+
+    @Override
+    default void formatTo(final StringBuilder buffer) {
+        appendTo(buffer);
+    }
 
 }

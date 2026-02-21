@@ -64,14 +64,33 @@ public class DefaultPositionData implements PositionData {
                 .append(", buyQuantity=").append(buyQuantity())
                 .append(", sellQuantity=").append(sellQuantity())
                 .append(", netQuantity=").append(netQuantity())
-                .append(", avgBuyPrice=").append(avgBuyPrice())
-                .append(", avgSellPrice=").append(avgSellPrice())
-                .append(']');
+                .append(", avgBuyPrice=");
+        appendDouble2dp(builder, avgBuyPrice());
+        builder.append(", avgSellPrice=");
+        appendDouble2dp(builder, avgSellPrice());
+        builder.append(']');
         return builder;
     }
 
     @Override
     public String toString() {
         return appendTo(new StringBuilder()).toString();
+    }
+
+    // GC-free 2-decimal-place double formatter: avoids StringBuilder.append(double) which
+    // calls Double.toString() and allocates. Scales to integer arithmetic instead.
+    private static void appendDouble2dp(final StringBuilder sb, final double value) {
+        if (Double.isNaN(value)) {
+            sb.append("NaN");
+        } else if (Double.isInfinite(value)) {
+            sb.append(value > 0 ? "Infinity" : "-Infinity");
+        } else {
+            final long scaled = Math.round(value * 100.0);
+            final long intPart = scaled / 100;
+            final long fracPart = Math.abs(scaled % 100);
+            sb.append(intPart).append('.');
+            if (fracPart < 10) sb.append('0'); // zero-pad single digit fraction
+            sb.append(fracPart);
+        }
     }
 }

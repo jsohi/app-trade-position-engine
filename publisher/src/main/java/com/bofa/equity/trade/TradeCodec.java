@@ -5,6 +5,7 @@ import com.bofa.equity.sbe.TradeEncoder;
 import org.agrona.MutableDirectBuffer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.StringBuilderFormattable;
 
 import static com.bofa.equity.trade.TradeEncoderHelper.*;
 
@@ -15,7 +16,9 @@ public class TradeCodec {
     private final TradeEncoder tradeEncoder = new TradeEncoder();
     private final StringBuilder referenceIdTemp = new StringBuilder(TradeEncoder.referenceIdLength());
     private final byte[] descriptionBytes = new byte[2048]; // pre-allocated, zero garbage on hot path
-    private final StringBuilder logBuffer = new StringBuilder(256); // pre-allocated, avoids String allocation at log call site
+    // Pre-allocated formattable: Log4j2 calls formatTo() directly on its own internal reused buffer —
+    // no StringBuilder or String allocation at the log call site.
+    private final StringBuilderFormattable encodedTradeLog = sb -> tradeEncoder.appendTo(sb);
 
     public int encodeTrade(final MutableDirectBuffer directBuffer) {
         // validations of fields can be done here, before encoding fields
@@ -29,9 +32,7 @@ public class TradeCodec {
                 .timestampMillis(System.nanoTime()) // nanos stored in uint64 field; field name is legacy
                 .putDescription(descriptionBytes, 0, randomDescriptionBytes(descriptionBytes)); // zero allocation, variable length set last for SBE encoder
 
-        logBuffer.setLength(0);
-        tradeEncoder.appendTo(logBuffer);
-        logger.debug("Encoded {}", logBuffer);
+        logger.debug("Encoded {}", encodedTradeLog);
         return MessageHeaderEncoder.ENCODED_LENGTH + tradeEncoder.encodedLength();
     }
 }

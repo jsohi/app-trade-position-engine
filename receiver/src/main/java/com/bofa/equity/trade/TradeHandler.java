@@ -7,6 +7,7 @@ import com.bofa.equity.sbe.TradeEncoder;
 import org.agrona.DirectBuffer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.StringBuilderFormattable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -17,7 +18,9 @@ public record TradeHandler(PositionAggregator positionAggregator) {
 
     private static final MessageHeaderDecoder MESSAGE_HEADER_DECODER = new MessageHeaderDecoder();
     private static final TradeDecoder TRADE_DECODER = new TradeDecoder();
-    private static final StringBuilder LOG_BUFFER = new StringBuilder(256); // pre-allocated, avoids String allocation at log call site
+    // Pre-allocated formattable: Log4j2 calls formatTo() directly on its own internal reused buffer —
+    // no StringBuilder or String allocation at the log call site.
+    private static final StringBuilderFormattable TRADE_LOG = sb -> TRADE_DECODER.appendTo(sb);
 
     // Storing the indexed trade data with attributes, however we can even store just index trade reference ids only here and data can be stored separately by another microservice
     // we can also use object pooling here, where position objects are created at startup with initial capacity and even when expanding post load factor changes
@@ -66,9 +69,7 @@ public record TradeHandler(PositionAggregator positionAggregator) {
         trade.wrapAndApplyHeader(directBuffer, offset, headerDecoder);
         // validation of trade fields can be done here
 
-        LOG_BUFFER.setLength(0);
-        trade.appendTo(LOG_BUFFER);
-        logger.debug("Handling {}", LOG_BUFFER);
+        logger.debug("Handling {}", TRADE_LOG);
         positionAggregator.aggregate(trade, receivedTimeNanos);
     }
 
