@@ -38,7 +38,10 @@ public class ReceiverApp {
 
             final ReceiveAgent receiveAgent = new ReceiveAgent(subscription, barrier, sendCount, tradeHandler);
             final AgentRunner receiveAgentRunner = new AgentRunner(
-                    new BusySpinIdleStrategy(), Throwable::printStackTrace, null, receiveAgent);
+                    new BusySpinIdleStrategy(),
+                    t -> logger.error("Unhandled error in ReceiveAgent duty cycle", t),
+                    null,
+                    receiveAgent);
 
             AgentRunner.startOnThread(receiveAgentRunner);
 
