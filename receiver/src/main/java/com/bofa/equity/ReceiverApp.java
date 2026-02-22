@@ -22,7 +22,7 @@ public class ReceiverApp {
         }
 
         final int sendCount  = Integer.parseInt(System.getProperty("send.count", "1000000"));
-        final String channel = System.getProperty("aeron.channel", "aeron:ipc");
+        final String channel = validateChannel(System.getProperty("aeron.channel", "aeron:ipc"));
         final int streamId   = Integer.parseInt(System.getProperty("aeron.stream.id", "10"));
 
         logger.info("Receiver starting: aeronDir={}, sendCount={}, channel={}, stream={}",
@@ -49,5 +49,13 @@ public class ReceiverApp {
             subscription.close();
             logger.info("Receiver done.");
         }
+    }
+
+    private static String validateChannel(String channel) {
+        if ("aeron:ipc".equals(channel) || channel.startsWith("aeron:udp?endpoint=")) {
+            return channel;
+        }
+        throw new IllegalArgumentException(
+                "Invalid aeron.channel '" + channel + "': must be 'aeron:ipc' or 'aeron:udp?endpoint=<host>:<port>'");
     }
 }

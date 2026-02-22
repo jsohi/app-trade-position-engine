@@ -19,7 +19,7 @@ public class PublisherApp {
         }
 
         final int sendCount     = Integer.parseInt(System.getProperty("send.count", "1000000"));
-        final String channel    = System.getProperty("aeron.channel", "aeron:ipc");
+        final String channel    = validateChannel(System.getProperty("aeron.channel", "aeron:ipc"));
         final int streamId      = Integer.parseInt(System.getProperty("aeron.stream.id", "10"));
         final int auditStreamId = Integer.parseInt(System.getProperty("audit.stream.id", "11"));
 
@@ -59,5 +59,13 @@ public class PublisherApp {
 
             logger.info("Publisher done: sent={}", sent);
         }
+    }
+
+    private static String validateChannel(String channel) {
+        if ("aeron:ipc".equals(channel) || channel.startsWith("aeron:udp?endpoint=")) {
+            return channel;
+        }
+        throw new IllegalArgumentException(
+                "Invalid aeron.channel '" + channel + "': must be 'aeron:ipc' or 'aeron:udp?endpoint=<host>:<port>'");
     }
 }
