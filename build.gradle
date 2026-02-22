@@ -95,3 +95,32 @@ test {
         exceptionFormat = 'full'
     }
 }
+
+// Downloads source JARs for all compile-classpath dependencies into build/dependency-sources/.
+// Usage: ./gradlew downloadSources
+// Sources are then readable at build/dependency-sources/<artifact>-sources.jar
+tasks.register('downloadSources') {
+    group = 'documentation'
+    description = 'Downloads source JARs for all compile-classpath dependencies'
+    dependsOn(configurations.compileClasspath)
+
+    doLast {
+        def sourcesDir = file("$buildDir/dependency-sources")
+        sourcesDir.mkdirs()
+
+        configurations.compileClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def id = artifact.moduleVersion.id
+            try {
+                def sourcesConfig = configurations.detachedConfiguration(
+                    dependencies.create("${id.group}:${id.name}:${id.version}:sources")
+                )
+                sourcesConfig.resolvedConfiguration.resolvedArtifacts.each { src ->
+                    ant.copy(file: src.file, todir: sourcesDir, overwrite: true)
+                    logger.lifecycle("  Downloaded: ${src.file.name}")
+                }
+            } catch (ignored) {
+                logger.debug("No sources available for ${id.group}:${id.name}:${id.version}")
+            }
+        }
+    }
+}
