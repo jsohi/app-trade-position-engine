@@ -133,7 +133,8 @@ public class MultiProcessPipelineIT {
                 while ((line = reader.readLine()) != null) {
                     sb.append(line).append('\n');
                 }
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                logger.debug("IOException while draining subprocess stdout — process may have exited early", e);
             }
             return sb.toString();
         });
