@@ -21,9 +21,9 @@ public class ReceiverApp {
             throw new IllegalStateException("System property -Daeron.dir is required");
         }
 
-        final int sendCount  = Integer.parseInt(System.getProperty("send.count", "1000000"));
+        final int sendCount  = parseIntProperty("send.count", 1_000_000);
         final String channel = validateChannel(System.getProperty("aeron.channel", "aeron:ipc"));
-        final int streamId   = Integer.parseInt(System.getProperty("aeron.stream.id", "10"));
+        final int streamId   = parseIntProperty("aeron.stream.id", 10);
 
         logger.info("Receiver starting: aeronDir={}, sendCount={}, channel={}, stream={}",
                 aeronDir, sendCount, channel, streamId);
@@ -48,6 +48,19 @@ public class ReceiverApp {
             receiveAgentRunner.close();
             subscription.close();
             logger.info("Receiver done.");
+        }
+    }
+
+    private static int parseIntProperty(String name, int defaultValue) {
+        final String value = System.getProperty(name);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "Invalid value for system property -D" + name + "='" + value + "': expected an integer");
         }
     }
 
