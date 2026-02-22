@@ -39,17 +39,21 @@ public class PublisherApp {
 
             int sent = 0;
             while (sent < sendCount) {
-                if (!publication.isConnected()) {
-                    Thread.onSpinWait();
-                    continue;
-                }
                 final int len = tradeCodec.encodeTrade(buffer);
-                if (publication.offer(buffer, 0, len) > 0) {
+                final long result = publication.offer(buffer, 0, len);
+                if (result > 0) {
                     sent++;
                     if (auditPublication.isConnected()) {
                         final int auditLen = auditTradeCodec.encodeAuditTrade(auditBuffer);
                         auditPublication.offer(auditBuffer, 0, auditLen);
                     }
+                } else if (result == Publication.BACK_PRESSURED
+                        || result == Publication.ADMIN_ACTION
+                        || result == Publication.NOT_CONNECTED) {
+                    Thread.onSpinWait();
+                } else {
+                    logger.error("Publication offer failed permanently: result={}", result);
+                    break;
                 }
             }
 

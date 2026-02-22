@@ -33,7 +33,12 @@ public class MediaDriverApp {
             System.out.flush();
 
             // Write to a well-known file for scripted use.
-            Files.writeString(Path.of("/tmp/aeron-trade-engine.dir"), dirName);
+            // Default uses the JVM temp directory (cross-platform); override with -Daeron.dir.file=<path>.
+            final Path aeronDirFile = Path.of(
+                    System.getProperty("aeron.dir.file",
+                            Path.of(System.getProperty("java.io.tmpdir"), "aeron-trade-engine.dir").toString()));
+            Files.writeString(aeronDirFile, dirName);
+            logger.info("Aeron directory written to: {}", aeronDirFile);
 
             new ShutdownSignalBarrier().await();
             logger.info("MediaDriver shutting down...");
