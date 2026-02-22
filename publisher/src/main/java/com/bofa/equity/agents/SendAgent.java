@@ -4,15 +4,15 @@ import io.aeron.Publication;
 import org.agrona.ExpandableArrayBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.Agent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.bofa.equity.trade.AuditTradeCodec;
 import com.bofa.equity.trade.TradeCodec;
 import static java.util.Objects.requireNonNull;
 
 public class SendAgent implements Agent {
-    private final Logger logger = LoggerFactory.getLogger(SendAgent.class);
+    private final Logger logger = LogManager.getLogger(SendAgent.class);
 
     // Can also use agrona UnsafeBuffer with fixed capacity for off heap usage, but in memory buffer is sufficient for current use case
     private final MutableDirectBuffer directBuffer = new ExpandableArrayBuffer();

@@ -33,6 +33,6 @@ dependencies {
     api group: 'io.aeron', name: 'aeron-all', version: AERON_VERSION
     api group: 'org.agrona', name: 'agrona', version: AGRONA_VERSION
     api group: 'org.decimal4j', name: 'decimal4j', version: DECIMAL_4J_VERSION
-    api group: 'org.slf4j', name: 'slf4j-api', version: '2.0.17'
+    api group: 'org.apache.logging.log4j', name: 'log4j-api', version: LOG4J_VERSION
     codecGeneration group: 'uk.co.real-logic', name: 'sbe-tool', version: SBE_VERSION
 }

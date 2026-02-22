@@ -5,14 +5,14 @@ import com.bofa.equity.sbe.SideType;
 import com.bofa.equity.sbe.TradeDecoder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.bofa.equity.util.TradeTestCodecs;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PositionAggregatorTest {
-    private static final Logger logger = LoggerFactory.getLogger(PositionAggregatorTest.class);
+    private static final Logger logger = LogManager.getLogger(PositionAggregatorTest.class);
 
     private static boolean doubleEqual(final double d1, final double d2) {
         final double d = d1 / d2;

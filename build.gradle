@@ -27,6 +27,7 @@ ext {
     HDR_HISTOGRAM_VERSION = '2.2.2' // latency capture library with plotting
     AFFINITY_VERSION    = '3.23.3' // OpenHFT thread-to-core pinning
     LOG4J_VERSION       = '2.24.3' // Log4j2 implementation + SLF4J 2.x bridge
+    DISRUPTOR_VERSION   = '3.4.4'  // LMAX Disruptor — required for Log4j2 async garbage-free logging
 }
 
 allprojects {
@@ -69,8 +70,8 @@ dependencies {
     implementation project(':shared')
     implementation project(':publisher')
     implementation project(':receiver')
-    runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: LOG4J_VERSION
     runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: LOG4J_VERSION
+    runtimeOnly group: 'com.lmax', name: 'disruptor', version: DISRUPTOR_VERSION
     implementation group: 'io.aeron', name: 'aeron-all', version: AERON_VERSION
     implementation group: 'org.agrona', name: 'agrona', version: AGRONA_VERSION
     implementation group: 'net.openhft', name: 'affinity', version: AFFINITY_VERSION
@@ -92,5 +93,34 @@ test {
     testLogging {
         showStandardStreams = true
         exceptionFormat = 'full'
+    }
+}
+
+// Downloads source JARs for all compile-classpath dependencies into build/dependency-sources/.
+// Usage: ./gradlew downloadSources
+// Sources are then readable at build/dependency-sources/<artifact>-sources.jar
+tasks.register('downloadSources') {
+    group = 'documentation'
+    description = 'Downloads source JARs for all compile-classpath dependencies'
+    dependsOn(configurations.compileClasspath)
+
+    doLast {
+        def sourcesDir = file("$buildDir/dependency-sources")
+        sourcesDir.mkdirs()
+
+        configurations.compileClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def id = artifact.moduleVersion.id
+            try {
+                def sourcesConfig = configurations.detachedConfiguration(
+                    dependencies.create("${id.group}:${id.name}:${id.version}:sources")
+                )
+                sourcesConfig.resolvedConfiguration.resolvedArtifacts.each { src ->
+                    ant.copy(file: src.file, todir: sourcesDir, overwrite: true)
+                    logger.lifecycle("  Downloaded: ${src.file.name}")
+                }
+            } catch (ignored) {
+                logger.debug("No sources available for ${id.group}:${id.name}:${id.version}")
+            }
+        }
     }
 }
