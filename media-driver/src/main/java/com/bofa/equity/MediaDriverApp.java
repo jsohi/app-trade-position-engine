@@ -13,7 +13,7 @@ import java.nio.file.Path;
 public class MediaDriverApp {
     private static final Logger logger = LogManager.getLogger(MediaDriverApp.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         final MediaDriver.Context ctx = new MediaDriver.Context()
                 .dirDeleteOnStart(true)
                 .threadingMode(ThreadingMode.DEDICATED)
@@ -37,8 +37,14 @@ public class MediaDriverApp {
             final Path aeronDirFile = Path.of(
                     System.getProperty("aeron.dir.file",
                             Path.of(System.getProperty("java.io.tmpdir"), "aeron-trade-engine.dir").toString()));
-            Files.writeString(aeronDirFile, dirName);
-            logger.info("Aeron directory written to: {}", aeronDirFile);
+            try {
+                Files.writeString(aeronDirFile, dirName);
+                logger.info("Aeron directory written to: {}", aeronDirFile);
+            } catch (IOException e) {
+                logger.error("Failed to write Aeron directory to {}: {} — scripts relying on this file will not work," +
+                        " but the MediaDriver is still running. Use AERON_DIR={} from stdout instead.",
+                        aeronDirFile, e.getMessage(), dirName);
+            }
 
             new ShutdownSignalBarrier().await();
             logger.info("MediaDriver shutting down...");
