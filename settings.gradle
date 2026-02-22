@@ -3,4 +3,5 @@ rootProject.name = 'app-trade-position-engine'
 include(':shared')
 include(':publisher')
 include(':receiver')
+include(':media-driver')
 
