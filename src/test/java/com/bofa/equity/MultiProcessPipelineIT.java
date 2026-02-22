@@ -1,5 +1,7 @@
 package com.bofa.equity;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
@@ -18,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Timeout(120)
 public class MultiProcessPipelineIT {
 
+    private static final Logger logger = LogManager.getLogger(MultiProcessPipelineIT.class);
     private static final int SEND_COUNT = 10_000;
 
     @Test
@@ -103,7 +106,8 @@ public class MultiProcessPipelineIT {
                         latch.countDown();
                     }
                 }
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                logger.debug("IOException while reading MediaDriver stdout — process may have exited early", e);
             } finally {
                 latch.countDown(); // unblock await if process exits without printing AERON_DIR
             }
