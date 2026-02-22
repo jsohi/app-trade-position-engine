@@ -27,8 +27,10 @@ public class MultiProcessPipelineIT {
     void threeProcess_allTradesReceivedAndAggregated() throws Exception {
         // Step 1: Launch MediaDriver and wait for it to print its aeron directory.
         Process mediaDriver = launch("com.bofa.equity.MediaDriverApp");
-        String aeronDir = readAeronDir(mediaDriver, 15);
-        assertNotNull(aeronDir, "MediaDriver did not print AERON_DIR within 15 seconds");
+        StringBuffer mediaDriverOutput = new StringBuffer();
+        String aeronDir = readAeronDir(mediaDriver, 15, mediaDriverOutput);
+        assertNotNull(aeronDir,
+                "MediaDriver did not print AERON_DIR within 15 seconds. Captured output:\n" + mediaDriverOutput);
 
         try {
             // Step 2: Start Receiver first so its subscription is ready when Publisher connects.
@@ -90,9 +92,12 @@ public class MultiProcessPipelineIT {
      * {@code "AERON_DIR="}. Continues draining after the line is found to prevent the subprocess
      * from blocking on a full pipe buffer.
      *
+     * @param capturedOutput accumulates all lines read from the process — populated by a background
+     *                       thread, so it may still be written to after this method returns; safe to
+     *                       read from the calling thread once {@code aeronDir} is known to be null
      * @return the extracted aeron directory path, or {@code null} if not found within the timeout
      */
-    private String readAeronDir(Process process, int timeoutSecs) throws Exception {
+    private String readAeronDir(Process process, int timeoutSecs, StringBuffer capturedOutput) throws Exception {
         AtomicReference<String> found = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
 
@@ -101,6 +106,7 @@ public class MultiProcessPipelineIT {
                     new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    capturedOutput.append(line).append('\n');
                     if (found.get() == null && line.startsWith("AERON_DIR=")) {
                         found.set(line.substring("AERON_DIR=".length()).trim());
                         latch.countDown();
