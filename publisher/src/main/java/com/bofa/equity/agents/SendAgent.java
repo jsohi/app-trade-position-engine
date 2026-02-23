@@ -24,6 +24,7 @@ public class SendAgent implements Agent {
     private final Publication auditPublication; // nullable — stream 11 for audit/regulatory data
     private final int sendCount;
     private int currentCountItem = 0;
+    private int pendingEncodedLength = -1; // -1 means no encoded message pending retry
 
     // Full constructor: position stream + optional audit stream
     public SendAgent(final Publication publication, final Publication auditPublication, final int sendCount) {
@@ -45,9 +46,13 @@ public class SendAgent implements Agent {
         }
 
         if (publication.isConnected()) {
-            final int encodingLengthPlusHeader = tradeCodec.encodeTrade(directBuffer);
-            if (publication.offer(directBuffer, 0, encodingLengthPlusHeader) > 0) {
+            // Encode once per trade; reuse the buffer on back-pressure retries
+            if (pendingEncodedLength < 0) {
+                pendingEncodedLength = tradeCodec.encodeTrade(directBuffer);
+            }
+            if (publication.offer(directBuffer, 0, pendingEncodedLength) > 0) {
                 currentCountItem++;
+                pendingEncodedLength = -1; // reset so the next trade gets encoded fresh
                 // Publish audit data on separate stream when available
                 if (auditPublication != null && auditPublication.isConnected()) {
                     final int auditLength = auditTradeCodec.encodeAuditTrade(auditBuffer);
