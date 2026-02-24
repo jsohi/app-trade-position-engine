@@ -1,7 +1,8 @@
 package com.bofa.equity.trade;
 
+import com.bofa.equity.sbe.AuditTradeEncoder;
+import com.bofa.equity.sbe.TradeEncoder;
 import org.agrona.ExpandableArrayBuffer;
-import org.apache.logging.log4j.util.StringBuilderFormattable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -12,38 +13,34 @@ import static org.junit.jupiter.api.Assertions.*;
 class TradeCodecFormattableTest {
 
     @Test
-    @DisplayName("TradeCodec.encodedTradeLog is StringBuilderFormattable and produces output after encoding")
-    void tradeCodec_encodedTradeLog_isStringBuilderFormattable() throws Exception {
+    @DisplayName("TradeCodec logging uses immutable toString snapshot after encoding")
+    void tradeCodec_encoderToString_producesOutputAfterEncoding() throws Exception {
         final TradeCodec codec = new TradeCodec();
         final ExpandableArrayBuffer buffer = new ExpandableArrayBuffer(512);
         codec.encodeTrade(buffer);
 
-        final Field field = TradeCodec.class.getDeclaredField("encodedTradeLog");
+        final Field field = TradeCodec.class.getDeclaredField("tradeEncoder");
         field.setAccessible(true);
-        final Object log = field.get(codec);
+        final TradeEncoder encoder = (TradeEncoder) field.get(codec);
 
-        assertInstanceOf(StringBuilderFormattable.class, log);
-
-        final StringBuilder sb = new StringBuilder();
-        ((StringBuilderFormattable) log).formatTo(sb);
-        assertFalse(sb.isEmpty(), "formatTo should produce non-empty output after encoding a trade");
+        final String output = encoder.toString();
+        assertNotNull(output);
+        assertFalse(output.isEmpty(), "toString should produce non-empty output after encoding a trade");
     }
 
     @Test
-    @DisplayName("AuditTradeCodec.encodedAuditLog is StringBuilderFormattable and produces output after encoding")
-    void auditTradeCodec_encodedAuditLog_isStringBuilderFormattable() throws Exception {
+    @DisplayName("AuditTradeCodec logging uses immutable toString snapshot after encoding")
+    void auditTradeCodec_encoderToString_producesOutputAfterEncoding() throws Exception {
         final AuditTradeCodec codec = new AuditTradeCodec();
         final ExpandableArrayBuffer buffer = new ExpandableArrayBuffer(512);
         codec.encodeAuditTrade(buffer);
 
-        final Field field = AuditTradeCodec.class.getDeclaredField("encodedAuditLog");
+        final Field field = AuditTradeCodec.class.getDeclaredField("auditEncoder");
         field.setAccessible(true);
-        final Object log = field.get(codec);
+        final AuditTradeEncoder encoder = (AuditTradeEncoder) field.get(codec);
 
-        assertInstanceOf(StringBuilderFormattable.class, log);
-
-        final StringBuilder sb = new StringBuilder();
-        ((StringBuilderFormattable) log).formatTo(sb);
-        assertFalse(sb.isEmpty(), "formatTo should produce non-empty output after encoding an audit trade");
+        final String output = encoder.toString();
+        assertNotNull(output);
+        assertFalse(output.isEmpty(), "toString should produce non-empty output after encoding an audit trade");
     }
 }

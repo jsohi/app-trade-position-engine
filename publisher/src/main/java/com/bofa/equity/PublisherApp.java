@@ -1,0 +1,84 @@
+package com.bofa.equity;
+
+import com.bofa.equity.trade.AuditTradeCodec;
+import com.bofa.equity.trade.TradeCodec;
+import io.aeron.Aeron;
+import io.aeron.Publication;
+import org.agrona.ExpandableArrayBuffer;
+import org.agrona.MutableDirectBuffer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+public class PublisherApp {
+    private static final Logger logger = LogManager.getLogger(PublisherApp.class);
+
+    public static void main(String[] args) {
+        final String aeronDir = System.getProperty("aeron.dir");
+        if (aeronDir == null) {
+            throw new IllegalStateException("System property -Daeron.dir is required");
+        }
+
+        final int sendCount     = parseIntProperty("send.count", 1_000_000);
+        final String channel    = validateChannel(System.getProperty("aeron.channel", "aeron:ipc"));
+        final int streamId      = parseIntProperty("aeron.stream.id", 10);
+        final int auditStreamId = parseIntProperty("audit.stream.id", 11);
+
+        logger.info("Publisher starting: aeronDir={}, sendCount={}, channel={}, stream={}",
+                aeronDir, sendCount, channel, streamId);
+
+        final Aeron.Context aeronCtx = new Aeron.Context().aeronDirectoryName(aeronDir);
+
+        try (Aeron aeron = Aeron.connect(aeronCtx);
+             Publication publication = aeron.addPublication(channel, streamId);
+             Publication auditPublication = aeron.addPublication(channel, auditStreamId)) {
+
+            final TradeCodec tradeCodec = new TradeCodec();
+            final AuditTradeCodec auditTradeCodec = new AuditTradeCodec();
+            final MutableDirectBuffer buffer = new ExpandableArrayBuffer();
+            final MutableDirectBuffer auditBuffer = new ExpandableArrayBuffer();
+
+            int sent = 0;
+            while (sent < sendCount) {
+                final int len = tradeCodec.encodeTrade(buffer);
+                final long result = publication.offer(buffer, 0, len);
+                if (result > 0) {
+                    sent++;
+                    if (auditPublication.isConnected()) {
+                        final int auditLen = auditTradeCodec.encodeAuditTrade(auditBuffer);
+                        auditPublication.offer(auditBuffer, 0, auditLen);
+                    }
+                } else if (result == Publication.BACK_PRESSURED
+                        || result == Publication.ADMIN_ACTION
+                        || result == Publication.NOT_CONNECTED) {
+                    Thread.onSpinWait();
+                } else {
+                    logger.error("Publication offer failed permanently: result={}", result);
+                    break;
+                }
+            }
+
+            logger.info("Publisher done: sent={}", sent);
+        }
+    }
+
+    private static int parseIntProperty(String name, int defaultValue) {
+        final String value = System.getProperty(name);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "Invalid value for system property -D" + name + "='" + value + "': expected an integer");
+        }
+    }
+
+    private static String validateChannel(String channel) {
+        if ("aeron:ipc".equals(channel) || channel.startsWith("aeron:udp?endpoint=")) {
+            return channel;
+        }
+        throw new IllegalArgumentException(
+                "Invalid aeron.channel '" + channel + "': must be 'aeron:ipc' or 'aeron:udp?endpoint=<host>:<port>'");
+    }
+}

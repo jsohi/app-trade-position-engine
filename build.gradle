@@ -70,6 +70,7 @@ dependencies {
     implementation project(':shared')
     implementation project(':publisher')
     implementation project(':receiver')
+    testRuntimeOnly project(':media-driver')
     runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-core', version: LOG4J_VERSION
     runtimeOnly group: 'com.lmax', name: 'disruptor', version: DISRUPTOR_VERSION
     implementation group: 'io.aeron', name: 'aeron-all', version: AERON_VERSION
