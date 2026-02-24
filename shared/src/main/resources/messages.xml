@@ -51,6 +51,37 @@
             <type name="varData" primitiveType="uint16" length="0" characterEncoding="UTF-8"/>
         </composite>
 
+        <!-- ===== RFQ types ===== -->
+
+        <!-- 32-byte ASCII identifiers for RFQ lifecycle -->
+        <type name="QuoteReqIdType" primitiveType="char" length="32" characterEncoding="ASCII"/>
+        <type name="QuoteIdType" primitiveType="char" length="32" characterEncoding="ASCII"/>
+        <type name="PartyIdType" primitiveType="char" length="32" characterEncoding="ASCII"/>
+        <type name="SymbolType" primitiveType="char" length="8" characterEncoding="ASCII"/>
+
+        <enum name="RfqSideType" encodingType="uint8">
+            <validValue name="BUY" description="Buy">0</validValue>
+            <validValue name="SELL" description="Sell">1</validValue>
+            <validValue name="BOTH" description="Both sides">2</validValue>
+        </enum>
+
+        <enum name="RfqStateType" encodingType="uint8">
+            <validValue name="REQUESTED" description="Quote requested">0</validValue>
+            <validValue name="QUOTED" description="Quote proposed">1</validValue>
+            <validValue name="ACCEPTED" description="Quote accepted">2</validValue>
+            <validValue name="REJECTED" description="Quote rejected">3</validValue>
+            <validValue name="CANCELLED" description="Quote cancelled">4</validValue>
+            <validValue name="EXPIRED" description="Quote expired">5</validValue>
+        </enum>
+
+        <type name="SequenceNumberType" primitiveType="uint64"/>
+
+        <!-- Variable-length UTF-8 string for RFQ reason text -->
+        <composite name="ReasonStringEncoding" description="Variable length UTF-8 string for rejection reason">
+            <type name="length" primitiveType="uint16" maxValue="1024"/>
+            <type name="varData" primitiveType="uint16" length="0" characterEncoding="UTF-8"/>
+        </composite>
+
     </types>
 
     <sbe:message name="Trade" id="1" description="Trade message">
@@ -88,6 +119,106 @@
 
         <data  name="description" id="4" type="DescriptionStringEncoding" description="Audit descriptive text"/>
 
+    </sbe:message>
+
+    <!-- ===== RFQ Command Messages (inbound, stream 20) ===== -->
+
+    <sbe:message name="RequestQuoteCmd" id="10" description="Request for Quote command">
+        <field name="quoteReqId"     id="1" type="QuoteReqIdType"/>
+        <field name="symbol"         id="2" type="SymbolType"/>
+        <field name="side"           id="3" type="RfqSideType"/>
+        <field name="quantity"       id="4" type="uint64"/>
+        <field name="partyId"        id="5" type="PartyIdType"/>
+        <field name="timestampNanos" id="6" type="uint64"/>
+    </sbe:message>
+
+    <sbe:message name="ProposeQuoteCmd" id="11" description="Propose Quote command">
+        <field name="quoteReqId"     id="1"  type="QuoteReqIdType"/>
+        <field name="quoteId"        id="2"  type="QuoteIdType"/>
+        <field name="symbol"         id="3"  type="SymbolType"/>
+        <field name="bidPx"          id="4"  type="PriceType"/>
+        <field name="offerPx"        id="5"  type="PriceType"/>
+        <field name="bidSize"        id="6"  type="uint64"/>
+        <field name="offerSize"      id="7"  type="uint64"/>
+        <field name="validUntilTime" id="8"  type="uint64"/>
+        <field name="partyId"        id="9"  type="PartyIdType"/>
+        <field name="timestampNanos" id="10" type="uint64"/>
+    </sbe:message>
+
+    <sbe:message name="AcceptQuoteCmd" id="12" description="Accept Quote command">
+        <field name="quoteReqId"     id="1" type="QuoteReqIdType"/>
+        <field name="quoteId"        id="2" type="QuoteIdType"/>
+        <field name="partyId"        id="3" type="PartyIdType"/>
+        <field name="timestampNanos" id="4" type="uint64"/>
+    </sbe:message>
+
+    <sbe:message name="RejectQuoteCmd" id="13" description="Reject Quote command">
+        <field name="quoteReqId"     id="1" type="QuoteReqIdType"/>
+        <field name="quoteId"        id="2" type="QuoteIdType"/>
+        <field name="partyId"        id="3" type="PartyIdType"/>
+        <field name="timestampNanos" id="4" type="uint64"/>
+        <data  name="reason"         id="5" type="ReasonStringEncoding"/>
+    </sbe:message>
+
+    <sbe:message name="CancelQuoteCmd" id="14" description="Cancel Quote command">
+        <field name="quoteReqId"     id="1" type="QuoteReqIdType"/>
+        <field name="partyId"        id="2" type="PartyIdType"/>
+        <field name="timestampNanos" id="3" type="uint64"/>
+    </sbe:message>
+
+    <!-- ===== RFQ Event Messages (outbound, stream 21) ===== -->
+
+    <sbe:message name="QuoteRequestedEvt" id="20" description="Quote Requested event">
+        <field name="sequenceNumber" id="1" type="SequenceNumberType"/>
+        <field name="quoteReqId"     id="2" type="QuoteReqIdType"/>
+        <field name="symbol"         id="3" type="SymbolType"/>
+        <field name="side"           id="4" type="RfqSideType"/>
+        <field name="quantity"       id="5" type="uint64"/>
+        <field name="partyId"        id="6" type="PartyIdType"/>
+        <field name="state"          id="7" type="RfqStateType"/>
+        <field name="timestampNanos" id="8" type="uint64"/>
+    </sbe:message>
+
+    <sbe:message name="QuoteProposedEvt" id="21" description="Quote Proposed event">
+        <field name="sequenceNumber" id="1"  type="SequenceNumberType"/>
+        <field name="quoteReqId"     id="2"  type="QuoteReqIdType"/>
+        <field name="quoteId"        id="3"  type="QuoteIdType"/>
+        <field name="symbol"         id="4"  type="SymbolType"/>
+        <field name="bidPx"          id="5"  type="PriceType"/>
+        <field name="offerPx"        id="6"  type="PriceType"/>
+        <field name="bidSize"        id="7"  type="uint64"/>
+        <field name="offerSize"      id="8"  type="uint64"/>
+        <field name="validUntilTime" id="9"  type="uint64"/>
+        <field name="partyId"        id="10" type="PartyIdType"/>
+        <field name="state"          id="11" type="RfqStateType"/>
+        <field name="timestampNanos" id="12" type="uint64"/>
+    </sbe:message>
+
+    <sbe:message name="QuoteAcceptedEvt" id="22" description="Quote Accepted event">
+        <field name="sequenceNumber" id="1" type="SequenceNumberType"/>
+        <field name="quoteReqId"     id="2" type="QuoteReqIdType"/>
+        <field name="quoteId"        id="3" type="QuoteIdType"/>
+        <field name="partyId"        id="4" type="PartyIdType"/>
+        <field name="state"          id="5" type="RfqStateType"/>
+        <field name="timestampNanos" id="6" type="uint64"/>
+    </sbe:message>
+
+    <sbe:message name="QuoteRejectedEvt" id="23" description="Quote Rejected event">
+        <field name="sequenceNumber" id="1" type="SequenceNumberType"/>
+        <field name="quoteReqId"     id="2" type="QuoteReqIdType"/>
+        <field name="quoteId"        id="3" type="QuoteIdType"/>
+        <field name="partyId"        id="4" type="PartyIdType"/>
+        <field name="state"          id="5" type="RfqStateType"/>
+        <field name="timestampNanos" id="6" type="uint64"/>
+        <data  name="reason"         id="7" type="ReasonStringEncoding"/>
+    </sbe:message>
+
+    <sbe:message name="QuoteCancelledEvt" id="24" description="Quote Cancelled event">
+        <field name="sequenceNumber" id="1" type="SequenceNumberType"/>
+        <field name="quoteReqId"     id="2" type="QuoteReqIdType"/>
+        <field name="partyId"        id="3" type="PartyIdType"/>
+        <field name="state"          id="4" type="RfqStateType"/>
+        <field name="timestampNanos" id="5" type="uint64"/>
     </sbe:message>
 
 </sbe:messageSchema>

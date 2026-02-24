@@ -4,4 +4,5 @@ include(':shared')
 include(':publisher')
 include(':receiver')
 include(':media-driver')
+include(':sequencer')
 
