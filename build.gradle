@@ -19,15 +19,15 @@ defaultTasks 'clean', 'build', 'test'
 ext {
     appGroup          = 'com.bofa.equity'
     appVersion        = '1.0.0-SNAPSHOT'
-    javaVersion       = JavaVersion.VERSION_21
+    javaVersion       = JavaVersion.VERSION_25
     AERON_VERSION     = '1.50.1'
     AGRONA_VERSION    = '2.4.0'
     SBE_VERSION       = '1.37.1'
     DECIMAL_4J_VERSION  = '1.0.3'  // garbage free decimal operations
     HDR_HISTOGRAM_VERSION = '2.2.2' // latency capture library with plotting
-    AFFINITY_VERSION    = '3.23.3' // OpenHFT thread-to-core pinning
+    AFFINITY_VERSION    = '2026.2' // OpenHFT thread-to-core pinning
     LOG4J_VERSION       = '2.24.3' // Log4j2 implementation + SLF4J 2.x bridge
-    DISRUPTOR_VERSION   = '3.4.4'  // LMAX Disruptor — required for Log4j2 async garbage-free logging
+    DISRUPTOR_VERSION   = '4.0.0'  // LMAX Disruptor — required for Log4j2 async garbage-free logging
 }
 
 allprojects {
@@ -76,14 +76,14 @@ dependencies {
     implementation group: 'io.aeron', name: 'aeron-all', version: AERON_VERSION
     implementation group: 'org.agrona', name: 'agrona', version: AGRONA_VERSION
     implementation group: 'net.openhft', name: 'affinity', version: AFFINITY_VERSION
-    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.14.0'
-    testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: '1.14.0'
-    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.14.0'
-    testImplementation group: 'io.cucumber', name: 'cucumber-java',                     version: '7.20.1'
-    testImplementation group: 'io.cucumber', name: 'cucumber-junit-platform-engine',     version: '7.20.1'
-    testImplementation group: 'io.cucumber', name: 'cucumber-picocontainer',             version: '7.20.1'
-    testImplementation group: 'org.junit.platform', name: 'junit-platform-suite',        version: '1.14.0'
-    testRuntimeOnly    group: 'org.junit.platform', name: 'junit-platform-suite-engine', version: '1.14.0'
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.11.4'
+    testRuntimeOnly group: 'org.junit.platform', name: 'junit-platform-launcher', version: '1.11.4'
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.11.4'
+    testImplementation group: 'io.cucumber', name: 'cucumber-java',                     version: '7.21.0'
+    testImplementation group: 'io.cucumber', name: 'cucumber-junit-platform-engine',     version: '7.21.0'
+    testImplementation group: 'io.cucumber', name: 'cucumber-picocontainer',             version: '7.21.0'
+    testImplementation group: 'org.junit.platform', name: 'junit-platform-suite',        version: '1.11.4'
+    testRuntimeOnly    group: 'org.junit.platform', name: 'junit-platform-suite-engine', version: '1.11.4'
 }
 
 test {
