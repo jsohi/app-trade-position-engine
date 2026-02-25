@@ -79,13 +79,10 @@ class RfqAggregateTest {
         setupQuotedState("RFQ-003", "Q-003");
 
         codecs.encodeAcceptQuoteCmd("RFQ-003", "Q-003", "CLIENT-A");
-        final var acceptDecoder = new com.bofa.equity.sbe.AcceptQuoteCmdDecoder();
-        final var headerDecoder = new com.bofa.equity.sbe.MessageHeaderDecoder();
-        headerDecoder.wrap(codecs.buffer(), 0);
-        acceptDecoder.wrapAndApplyHeader(codecs.buffer(), 0, headerDecoder);
+        final var acceptCmd = codecs.decodeAcceptQuoteCmd();
 
-        assertTrue(aggregate.validateAcceptQuote(acceptDecoder));
-        aggregate.applyQuoteAccepted(acceptDecoder);
+        assertTrue(aggregate.validateAcceptQuote(acceptCmd));
+        aggregate.applyQuoteAccepted(acceptCmd);
 
         // Terminal entries are evicted from the aggregate
         assertNull(aggregate.getState("RFQ-003"));
@@ -99,12 +96,9 @@ class RfqAggregateTest {
         aggregate.applyQuoteRequested(reqCmd);
 
         codecs.encodeAcceptQuoteCmd("RFQ-004", "Q-004", "CLIENT-A");
-        final var acceptDecoder = new com.bofa.equity.sbe.AcceptQuoteCmdDecoder();
-        final var headerDecoder = new com.bofa.equity.sbe.MessageHeaderDecoder();
-        headerDecoder.wrap(codecs.buffer(), 0);
-        acceptDecoder.wrapAndApplyHeader(codecs.buffer(), 0, headerDecoder);
+        final var acceptCmd = codecs.decodeAcceptQuoteCmd();
 
-        assertFalse(aggregate.validateAcceptQuote(acceptDecoder));
+        assertFalse(aggregate.validateAcceptQuote(acceptCmd));
     }
 
     @Test
@@ -113,12 +107,9 @@ class RfqAggregateTest {
 
         // Try to accept with a different party (not the requestor)
         codecs.encodeAcceptQuoteCmd("RFQ-008", "Q-008", "INTRUDER");
-        final var acceptDecoder = new com.bofa.equity.sbe.AcceptQuoteCmdDecoder();
-        final var headerDecoder = new com.bofa.equity.sbe.MessageHeaderDecoder();
-        headerDecoder.wrap(codecs.buffer(), 0);
-        acceptDecoder.wrapAndApplyHeader(codecs.buffer(), 0, headerDecoder);
+        final var acceptCmd = codecs.decodeAcceptQuoteCmd();
 
-        assertFalse(aggregate.validateAcceptQuote(acceptDecoder));
+        assertFalse(aggregate.validateAcceptQuote(acceptCmd));
         // RFQ should still be in QUOTED state
         assertEquals(RfqStateType.QUOTED, aggregate.getState("RFQ-008").currentState());
     }
@@ -128,13 +119,10 @@ class RfqAggregateTest {
         setupQuotedState("RFQ-005", "Q-005");
 
         codecs.encodeRejectQuoteCmd("RFQ-005", "Q-005", "CLIENT-A", "Price too high");
-        final var rejectDecoder = new com.bofa.equity.sbe.RejectQuoteCmdDecoder();
-        final var headerDecoder = new com.bofa.equity.sbe.MessageHeaderDecoder();
-        headerDecoder.wrap(codecs.buffer(), 0);
-        rejectDecoder.wrapAndApplyHeader(codecs.buffer(), 0, headerDecoder);
+        final var rejectCmd = codecs.decodeRejectQuoteCmd();
 
-        assertTrue(aggregate.validateRejectQuote(rejectDecoder));
-        aggregate.applyQuoteRejected(rejectDecoder);
+        assertTrue(aggregate.validateRejectQuote(rejectCmd));
+        aggregate.applyQuoteRejected(rejectCmd);
 
         // Terminal entries are evicted from the aggregate
         assertNull(aggregate.getState("RFQ-005"));
@@ -148,13 +136,10 @@ class RfqAggregateTest {
         aggregate.applyQuoteRequested(reqCmd);
 
         codecs.encodeCancelQuoteCmd("RFQ-006", "CLIENT-A");
-        final var cancelDecoder = new com.bofa.equity.sbe.CancelQuoteCmdDecoder();
-        final var headerDecoder = new com.bofa.equity.sbe.MessageHeaderDecoder();
-        headerDecoder.wrap(codecs.buffer(), 0);
-        cancelDecoder.wrapAndApplyHeader(codecs.buffer(), 0, headerDecoder);
+        final var cancelCmd = codecs.decodeCancelQuoteCmd();
 
-        assertTrue(aggregate.validateCancelQuote(cancelDecoder));
-        aggregate.applyQuoteCancelled(cancelDecoder);
+        assertTrue(aggregate.validateCancelQuote(cancelCmd));
+        aggregate.applyQuoteCancelled(cancelCmd);
 
         // Terminal entries are evicted from the aggregate
         assertNull(aggregate.getState("RFQ-006"));
@@ -166,20 +151,14 @@ class RfqAggregateTest {
 
         // Accept it first (evicts from aggregate)
         codecs.encodeAcceptQuoteCmd("RFQ-007", "Q-007", "CLIENT-A");
-        final var acceptDecoder = new com.bofa.equity.sbe.AcceptQuoteCmdDecoder();
-        final var hd1 = new com.bofa.equity.sbe.MessageHeaderDecoder();
-        hd1.wrap(codecs.buffer(), 0);
-        acceptDecoder.wrapAndApplyHeader(codecs.buffer(), 0, hd1);
-        aggregate.applyQuoteAccepted(acceptDecoder);
+        final var acceptCmd = codecs.decodeAcceptQuoteCmd();
+        aggregate.applyQuoteAccepted(acceptCmd);
 
         // Now try to cancel — should fail because entry was evicted (unknown quoteReqId)
         codecs.encodeCancelQuoteCmd("RFQ-007", "CLIENT-A");
-        final var cancelDecoder = new com.bofa.equity.sbe.CancelQuoteCmdDecoder();
-        final var hd2 = new com.bofa.equity.sbe.MessageHeaderDecoder();
-        hd2.wrap(codecs.buffer(), 0);
-        cancelDecoder.wrapAndApplyHeader(codecs.buffer(), 0, hd2);
+        final var cancelCmd = codecs.decodeCancelQuoteCmd();
 
-        assertFalse(aggregate.validateCancelQuote(cancelDecoder));
+        assertFalse(aggregate.validateCancelQuote(cancelCmd));
     }
 
     @Test
@@ -190,12 +169,9 @@ class RfqAggregateTest {
         aggregate.applyQuoteRequested(reqCmd);
 
         codecs.encodeCancelQuoteCmd("RFQ-009", "INTRUDER");
-        final var cancelDecoder = new com.bofa.equity.sbe.CancelQuoteCmdDecoder();
-        final var headerDecoder = new com.bofa.equity.sbe.MessageHeaderDecoder();
-        headerDecoder.wrap(codecs.buffer(), 0);
-        cancelDecoder.wrapAndApplyHeader(codecs.buffer(), 0, headerDecoder);
+        final var cancelCmd = codecs.decodeCancelQuoteCmd();
 
-        assertFalse(aggregate.validateCancelQuote(cancelDecoder));
+        assertFalse(aggregate.validateCancelQuote(cancelCmd));
     }
 
     private void setupQuotedState(final String quoteReqId, final String quoteId) {

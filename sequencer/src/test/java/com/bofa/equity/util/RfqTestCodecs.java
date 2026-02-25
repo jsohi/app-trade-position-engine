@@ -131,6 +131,24 @@ public class RfqTestCodecs {
         return proposeQuoteCmdDecoder;
     }
 
+    public AcceptQuoteCmdDecoder decodeAcceptQuoteCmd() {
+        headerDecoder.wrap(buffer, 0);
+        acceptQuoteCmdDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
+        return acceptQuoteCmdDecoder;
+    }
+
+    public RejectQuoteCmdDecoder decodeRejectQuoteCmd() {
+        headerDecoder.wrap(buffer, 0);
+        rejectQuoteCmdDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
+        return rejectQuoteCmdDecoder;
+    }
+
+    public CancelQuoteCmdDecoder decodeCancelQuoteCmd() {
+        headerDecoder.wrap(buffer, 0);
+        cancelQuoteCmdDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
+        return cancelQuoteCmdDecoder;
+    }
+
     // ---- Decode events ----
 
     public QuoteRequestedEvtDecoder decodeQuoteRequestedEvt(final MutableDirectBuffer evtBuffer) {

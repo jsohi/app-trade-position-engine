@@ -88,12 +88,13 @@ public class RfqEventPublisher {
                 .state(RfqStateType.REJECTED)
                 .timestampNanos(cmd.timestampNanos());
 
-        final String reason = cmd.reason();
-        if (reason != null && reason.length() > RfqConstants.MAX_REASON_LENGTH) {
-            rejectedEvtEncoder.reason(reason.substring(0, RfqConstants.MAX_REASON_LENGTH));
-        } else {
-            rejectedEvtEncoder.reason(reason != null ? reason : "");
+        String reason = cmd.reason();
+        if (reason == null) {
+            reason = "";
+        } else if (reason.length() > RfqConstants.MAX_REASON_LENGTH) {
+            reason = reason.substring(0, RfqConstants.MAX_REASON_LENGTH);
         }
+        rejectedEvtEncoder.reason(reason);
 
         offer(MessageHeaderEncoder.ENCODED_LENGTH + rejectedEvtEncoder.encodedLength());
     }

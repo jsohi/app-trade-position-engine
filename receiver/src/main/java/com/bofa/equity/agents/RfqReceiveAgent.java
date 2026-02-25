@@ -6,8 +6,6 @@ import io.aeron.Subscription;
 import io.aeron.logbuffer.Header;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.Agent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import static java.util.Objects.requireNonNull;
 
@@ -16,7 +14,6 @@ import static java.util.Objects.requireNonNull;
  * for read-side projection updates.
  */
 public class RfqReceiveAgent implements Agent {
-    private static final Logger logger = LogManager.getLogger(RfqReceiveAgent.class);
 
     private final Subscription subscription;
     private final RfqEventHandler eventHandler;

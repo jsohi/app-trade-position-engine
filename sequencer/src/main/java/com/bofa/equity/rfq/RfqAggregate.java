@@ -133,18 +133,15 @@ public class RfqAggregate {
     }
 
     public void applyQuoteAccepted(final AcceptQuoteCmdDecoder cmd) {
-        final RfqState state = rfqStates.remove(cmd.quoteReqId());
-        state.currentState(RfqStateType.ACCEPTED);
+        rfqStates.remove(cmd.quoteReqId());
     }
 
     public void applyQuoteRejected(final RejectQuoteCmdDecoder cmd) {
-        final RfqState state = rfqStates.remove(cmd.quoteReqId());
-        state.currentState(RfqStateType.REJECTED);
+        rfqStates.remove(cmd.quoteReqId());
     }
 
     public void applyQuoteCancelled(final CancelQuoteCmdDecoder cmd) {
-        final RfqState state = rfqStates.remove(cmd.quoteReqId());
-        state.currentState(RfqStateType.CANCELLED);
+        rfqStates.remove(cmd.quoteReqId());
     }
 
     // ---- Query ----
