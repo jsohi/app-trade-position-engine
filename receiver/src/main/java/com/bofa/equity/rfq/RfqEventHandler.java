@@ -33,7 +33,13 @@ public class RfqEventHandler {
 
         headerDecoder.wrap(buffer, offset);
 
-        if (headerDecoder.schemaId() != QuoteRequestedEvtEncoder.SCHEMA_ID) {
+        if (headerDecoder.schemaId() != RfqConstants.SCHEMA_ID) {
+            return false;
+        }
+
+        final int requiredLength = MessageHeaderDecoder.ENCODED_LENGTH + headerDecoder.blockLength();
+        if (length < requiredLength) {
+            logger.warn("Fragment too short for message block: {} bytes, expected at least {}", length, requiredLength);
             return false;
         }
 

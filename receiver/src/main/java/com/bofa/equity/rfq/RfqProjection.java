@@ -28,7 +28,7 @@ public class RfqProjection {
         entry.partyId(evt.partyId().trim());
         entry.state(evt.state());
         entry.timestampNanos(evt.timestampNanos());
-        logger.debug("Projected QuoteRequested: {}", entry);
+        logger.debug("Projected QuoteRequested: {}", entry.toString());
     }
 
     public void onQuoteProposed(final QuoteProposedEvtDecoder evt) {
@@ -45,7 +45,7 @@ public class RfqProjection {
 
         // Index by quoteId
         quoteCache.put(evt.quoteId().trim(), entry);
-        logger.debug("Projected QuoteProposed: {}", entry);
+        logger.debug("Projected QuoteProposed: {}", entry.toString());
     }
 
     public void onQuoteAccepted(final QuoteAcceptedEvtDecoder evt) {
@@ -55,7 +55,7 @@ public class RfqProjection {
             entry.sequenceNumber(evt.sequenceNumber());
             entry.state(evt.state());
             entry.timestampNanos(evt.timestampNanos());
-            logger.debug("Projected QuoteAccepted: {}", entry);
+            logger.debug("Projected QuoteAccepted: {}", entry.toString());
         }
     }
 
@@ -66,7 +66,7 @@ public class RfqProjection {
             entry.sequenceNumber(evt.sequenceNumber());
             entry.state(evt.state());
             entry.timestampNanos(evt.timestampNanos());
-            logger.debug("Projected QuoteRejected: {}", entry);
+            logger.debug("Projected QuoteRejected: {}", entry.toString());
         }
     }
 
@@ -77,7 +77,7 @@ public class RfqProjection {
             entry.sequenceNumber(evt.sequenceNumber());
             entry.state(evt.state());
             entry.timestampNanos(evt.timestampNanos());
-            logger.debug("Projected QuoteCancelled: {}", entry);
+            logger.debug("Projected QuoteCancelled: {}", entry.toString());
         }
     }
 

@@ -2,6 +2,7 @@ package com.bofa.equity.command;
 
 import com.bofa.equity.event.RfqEventPublisher;
 import com.bofa.equity.rfq.RfqAggregate;
+import com.bofa.equity.rfq.RfqConstants;
 import com.bofa.equity.sbe.*;
 import org.agrona.DirectBuffer;
 import org.apache.logging.log4j.LogManager;
@@ -42,7 +43,13 @@ public class RfqCommandHandler {
 
         headerDecoder.wrap(buffer, offset);
 
-        if (headerDecoder.schemaId() != RequestQuoteCmdEncoder.SCHEMA_ID) {
+        if (headerDecoder.schemaId() != RfqConstants.SCHEMA_ID) {
+            return false;
+        }
+
+        final int requiredLength = MessageHeaderDecoder.ENCODED_LENGTH + headerDecoder.blockLength();
+        if (length < requiredLength) {
+            logger.warn("Fragment too short for message block: {} bytes, expected at least {}", length, requiredLength);
             return false;
         }
 

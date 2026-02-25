@@ -1,5 +1,6 @@
 package com.bofa.equity.event;
 
+import com.bofa.equity.rfq.RfqConstants;
 import com.bofa.equity.sbe.*;
 import io.aeron.Publication;
 import org.agrona.ExpandableArrayBuffer;
@@ -85,8 +86,14 @@ public class RfqEventPublisher {
                 .quoteId(cmd.quoteId())
                 .partyId(cmd.partyId())
                 .state(RfqStateType.REJECTED)
-                .timestampNanos(cmd.timestampNanos())
-                .reason(cmd.reason());
+                .timestampNanos(cmd.timestampNanos());
+
+        final String reason = cmd.reason();
+        if (reason != null && reason.length() > RfqConstants.MAX_REASON_LENGTH) {
+            rejectedEvtEncoder.reason(reason.substring(0, RfqConstants.MAX_REASON_LENGTH));
+        } else {
+            rejectedEvtEncoder.reason(reason != null ? reason : "");
+        }
 
         offer(MessageHeaderEncoder.ENCODED_LENGTH + rejectedEvtEncoder.encodedLength());
     }

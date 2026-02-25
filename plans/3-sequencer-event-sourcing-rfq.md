@@ -97,7 +97,7 @@ Terminal states: ACCEPTED, REJECTED, CANCELLED, EXPIRED. No further commands acc
   - `SequencerApp.java` — main entry point (connects to Aeron, subscribes stream 20, publishes stream 21, runs SequencerAgent)
   - `agents/SequencerAgent.java` — implements Agrona `Agent`; polls commands, validates via aggregate, assigns sequence number, emits events
   - `rfq/RfqAggregate.java` — state machine + validation (`HashMap<String, RfqState>`); validate + apply methods per command type
-  - `rfq/RfqState.java` — mutable per-RFQ state (currentState, quoteReqId, quoteId, symbol, quantities, prices, parties)
+  - `rfq/RfqState.java` — mutable per-RFQ state (currentState, quoteReqId, quoteId, symbol, quantity, bidPx, offerPx, bidSize, offerSize, requestorPartyId, dealerPartyId)
   - `command/RfqCommandHandler.java` — SBE header decode + templateId dispatch (follows `TradeHandler` pattern)
   - `event/RfqEventPublisher.java` — SBE event encoding + Aeron publication (follows `TradeCodec` pattern with flyweight reuse)
 - **Create** `sequencer/src/main/resources/log4j2.xml` — copy existing pattern

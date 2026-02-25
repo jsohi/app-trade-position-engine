@@ -1,5 +1,6 @@
 package com.bofa.equity.agents;
 
+import com.bofa.equity.rfq.RfqConstants;
 import com.bofa.equity.rfq.RfqEventHandler;
 import io.aeron.Subscription;
 import io.aeron.logbuffer.Header;
@@ -17,8 +18,6 @@ import static java.util.Objects.requireNonNull;
 public class RfqReceiveAgent implements Agent {
     private static final Logger logger = LogManager.getLogger(RfqReceiveAgent.class);
 
-    public static final int FRAGMENT_LIMIT = 100;
-
     private final Subscription subscription;
     private final RfqEventHandler eventHandler;
 
@@ -30,7 +29,7 @@ public class RfqReceiveAgent implements Agent {
 
     @Override
     public int doWork() {
-        return subscription.poll(this::onFragment, FRAGMENT_LIMIT);
+        return subscription.poll(this::onFragment, RfqConstants.FRAGMENT_LIMIT);
     }
 
     private void onFragment(final DirectBuffer buffer,

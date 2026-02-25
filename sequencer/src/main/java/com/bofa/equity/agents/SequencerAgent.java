@@ -1,6 +1,7 @@
 package com.bofa.equity.agents;
 
 import com.bofa.equity.command.RfqCommandHandler;
+import com.bofa.equity.rfq.RfqConstants;
 import io.aeron.Subscription;
 import io.aeron.logbuffer.Header;
 import org.agrona.DirectBuffer;
@@ -17,8 +18,6 @@ import static java.util.Objects.requireNonNull;
 public class SequencerAgent implements Agent {
     private static final Logger logger = LogManager.getLogger(SequencerAgent.class);
 
-    public static final int FRAGMENT_LIMIT = 100;
-
     private final Subscription subscription;
     private final RfqCommandHandler commandHandler;
 
@@ -30,7 +29,7 @@ public class SequencerAgent implements Agent {
 
     @Override
     public int doWork() {
-        return subscription.poll(this::onFragment, FRAGMENT_LIMIT);
+        return subscription.poll(this::onFragment, RfqConstants.FRAGMENT_LIMIT);
     }
 
     private void onFragment(final DirectBuffer buffer,

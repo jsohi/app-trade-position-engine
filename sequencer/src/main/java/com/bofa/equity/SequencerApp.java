@@ -4,6 +4,7 @@ import com.bofa.equity.agents.SequencerAgent;
 import com.bofa.equity.command.RfqCommandHandler;
 import com.bofa.equity.event.RfqEventPublisher;
 import com.bofa.equity.rfq.RfqAggregate;
+import com.bofa.equity.rfq.AeronChannelValidator;
 import com.bofa.equity.rfq.RfqConstants;
 import io.aeron.Aeron;
 import io.aeron.Publication;
@@ -23,7 +24,7 @@ public class SequencerApp {
             throw new IllegalStateException("System property -Daeron.dir is required");
         }
 
-        final String channel = validateChannel(System.getProperty("aeron.channel", "aeron:ipc"));
+        final String channel = AeronChannelValidator.validateChannel(System.getProperty("aeron.channel", "aeron:ipc"));
 
         logger.info("Sequencer starting: aeronDir={}, channel={}, cmdStream={}, evtStream={}",
                 aeronDir, channel, RfqConstants.COMMAND_STREAM_ID, RfqConstants.EVENT_STREAM_ID);
@@ -57,11 +58,4 @@ public class SequencerApp {
         }
     }
 
-    private static String validateChannel(String channel) {
-        if ("aeron:ipc".equals(channel) || channel.startsWith("aeron:udp?endpoint=")) {
-            return channel;
-        }
-        throw new IllegalArgumentException(
-                "Invalid aeron.channel '" + channel + "': must be 'aeron:ipc' or 'aeron:udp?endpoint=<host>:<port>'");
-    }
 }

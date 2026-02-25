@@ -1,5 +1,6 @@
 package com.bofa.equity;
 
+import com.bofa.equity.rfq.AeronChannelValidator;
 import com.bofa.equity.trade.AuditTradeCodec;
 import com.bofa.equity.trade.TradeCodec;
 import io.aeron.Aeron;
@@ -19,7 +20,7 @@ public class PublisherApp {
         }
 
         final int sendCount     = parseIntProperty("send.count", 1_000_000);
-        final String channel    = validateChannel(System.getProperty("aeron.channel", "aeron:ipc"));
+        final String channel    = AeronChannelValidator.validateChannel(System.getProperty("aeron.channel", "aeron:ipc"));
         final int streamId      = parseIntProperty("aeron.stream.id", 10);
         final int auditStreamId = parseIntProperty("audit.stream.id", 11);
 
@@ -74,11 +75,4 @@ public class PublisherApp {
         }
     }
 
-    private static String validateChannel(String channel) {
-        if ("aeron:ipc".equals(channel) || channel.startsWith("aeron:udp?endpoint=")) {
-            return channel;
-        }
-        throw new IllegalArgumentException(
-                "Invalid aeron.channel '" + channel + "': must be 'aeron:ipc' or 'aeron:udp?endpoint=<host>:<port>'");
-    }
 }

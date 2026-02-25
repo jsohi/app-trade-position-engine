@@ -51,6 +51,11 @@ public class RfqAggregate {
             logger.warn("AcceptQuote for unknown quoteReqId: {}", quoteReqId);
             return false;
         }
+        if (!trimmedEquals(state.requestorPartyId(), cmd.partyId())) {
+            logger.warn("AcceptQuote by unauthorized party: {} for quoteReqId: {}",
+                    cmd.partyId(), quoteReqId);
+            return false;
+        }
         if (state.currentState() != RfqStateType.QUOTED) {
             logger.warn("AcceptQuote invalid transition from {} for quoteReqId: {}",
                     state.currentState(), quoteReqId);
@@ -64,6 +69,11 @@ public class RfqAggregate {
         final RfqState state = rfqStates.get(quoteReqId);
         if (state == null) {
             logger.warn("RejectQuote for unknown quoteReqId: {}", quoteReqId);
+            return false;
+        }
+        if (!trimmedEquals(state.requestorPartyId(), cmd.partyId())) {
+            logger.warn("RejectQuote by unauthorized party: {} for quoteReqId: {}",
+                    cmd.partyId(), quoteReqId);
             return false;
         }
         if (state.currentState() != RfqStateType.QUOTED) {
@@ -81,12 +91,21 @@ public class RfqAggregate {
             logger.warn("CancelQuote for unknown quoteReqId: {}", quoteReqId);
             return false;
         }
+        if (!trimmedEquals(state.requestorPartyId(), cmd.partyId())) {
+            logger.warn("CancelQuote by unauthorized party: {} for quoteReqId: {}",
+                    cmd.partyId(), quoteReqId);
+            return false;
+        }
         if (state.isTerminal()) {
             logger.warn("CancelQuote on terminal state {} for quoteReqId: {}",
                     state.currentState(), quoteReqId);
             return false;
         }
         return true;
+    }
+
+    private static boolean trimmedEquals(final String a, final String b) {
+        return a != null && b != null && a.trim().equals(b.trim());
     }
 
     // ---- Apply events (mutate state) ----
@@ -114,17 +133,17 @@ public class RfqAggregate {
     }
 
     public void applyQuoteAccepted(final AcceptQuoteCmdDecoder cmd) {
-        final RfqState state = rfqStates.get(cmd.quoteReqId());
+        final RfqState state = rfqStates.remove(cmd.quoteReqId());
         state.currentState(RfqStateType.ACCEPTED);
     }
 
     public void applyQuoteRejected(final RejectQuoteCmdDecoder cmd) {
-        final RfqState state = rfqStates.get(cmd.quoteReqId());
+        final RfqState state = rfqStates.remove(cmd.quoteReqId());
         state.currentState(RfqStateType.REJECTED);
     }
 
     public void applyQuoteCancelled(final CancelQuoteCmdDecoder cmd) {
-        final RfqState state = rfqStates.get(cmd.quoteReqId());
+        final RfqState state = rfqStates.remove(cmd.quoteReqId());
         state.currentState(RfqStateType.CANCELLED);
     }
 

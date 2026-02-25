@@ -3,6 +3,7 @@ package com.bofa.equity;
 import com.bofa.equity.agents.ReceiveAgent;
 import com.bofa.equity.cache.Cache;
 import com.bofa.equity.position.PositionAggregator;
+import com.bofa.equity.rfq.AeronChannelValidator;
 import com.bofa.equity.trade.TradeHandler;
 import io.aeron.Aeron;
 import io.aeron.Subscription;
@@ -22,7 +23,7 @@ public class ReceiverApp {
         }
 
         final int sendCount  = parseIntProperty("send.count", 1_000_000);
-        final String channel = validateChannel(System.getProperty("aeron.channel", "aeron:ipc"));
+        final String channel = AeronChannelValidator.validateChannel(System.getProperty("aeron.channel", "aeron:ipc"));
         final int streamId   = parseIntProperty("aeron.stream.id", 10);
 
         logger.info("Receiver starting: aeronDir={}, sendCount={}, channel={}, stream={}",
@@ -67,11 +68,4 @@ public class ReceiverApp {
         }
     }
 
-    private static String validateChannel(String channel) {
-        if ("aeron:ipc".equals(channel) || channel.startsWith("aeron:udp?endpoint=")) {
-            return channel;
-        }
-        throw new IllegalArgumentException(
-                "Invalid aeron.channel '" + channel + "': must be 'aeron:ipc' or 'aeron:udp?endpoint=<host>:<port>'");
-    }
 }
